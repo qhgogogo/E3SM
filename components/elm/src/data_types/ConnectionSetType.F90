@@ -244,18 +244,23 @@ subroutine ConnectionCalculateDistances(dist,gravity,distance_upwind, &
   PetscReal, intent(out) :: distance_gravity
   PetscReal, intent(out) :: upwind_weight
   
-  ! dist(-1) = scalar - fraction upwind
-  ! dist(0) = scalar - magnitude of distance
-  ! gravity = vector(3)
-  ! dist(1:3) = vector(3) - unit vector
+  !! dist(-1) = scalar - fraction upwind
+  !! dist(0) = scalar - magnitude of distance
+  !! gravity = vector(3)
+  !! dist(1:3) = vector(3) - unit vector
+  !distance_gravity = dist(0) * &                  ! distance_gravity = dx*g*n
+                     dot_product(gravity,dist(1:3))
+  !distance_upwind = dist(0)*dist(-1)
+  !distance_downwind = dist(0)-distance_upwind ! should avoid truncation error
+  
   distance_gravity = dist(0) * &                  ! distance_gravity = dx*g*n
                      dot_product(gravity,dist(1:3))
-  distance_upwind = dist(0)*dist(-1)
-  distance_downwind = dist(0)-distance_upwind ! should avoid truncation error
-  ! upweight could be calculated as 1.d0-fraction_upwind
-  ! however, this introduces ever so slight error causing pflow-overhaul not
-  ! to match pflow-orig.  This can be changed to 1.d0-fraction_upwind
-  upwind_weight = distance_downwind/(distance_upwind+distance_downwind)
+  distance_upwind = 1000._r8 
+  distance_downwind = 1000._r8  ! should avoid truncation error
+  !! upweight could be calculated as 1.d0-fraction_upwind
+  !! however, this introduces ever so slight error causing pflow-overhaul not
+  !! to match pflow-orig.  This can be changed to 1.d0-fraction_upwind
+  !upwind_weight = distance_downwind/(distance_upwind+distance_downwind)
   
 end subroutine ConnectionCalculateDistances
 
@@ -298,10 +303,10 @@ end subroutine ConnectionDestroy
 
 subroutine ConnectionDestroyList(list)
   ! 
-  ! Deallocates the module global list and array of regions
+  !! Deallocates the module global list and array of regions
   ! 
-  ! Author: Glenn Hammond
-  ! Date: 10/15/07
+  !! Author: Glenn Hammond
+  !! Date: 10/15/07
   ! 
 
   implicit none
