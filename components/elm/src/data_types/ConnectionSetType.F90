@@ -17,11 +17,11 @@ public :: get_natveg_column_id
 contains
 
 ! ************************************************************************** !
-function get_natveg_column_id(id,id_out)
+function get_natveg_column_id(id) result(id_out)
 
   implicit none
   integer, intent(in) :: id
-  integer, intent(out) :: id_out
+  integer, id_out
   id_out=id ! for 2D transect only 
 
 
