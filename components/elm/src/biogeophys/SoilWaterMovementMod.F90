@@ -282,6 +282,7 @@ contains
     use SoilHydrologyType    , only : soilhydrology_type
     use VegetationType       , only : veg_pp
     use ColumnType           , only : col_pp
+    use Connection_module    , only :: connection_set_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -575,7 +576,68 @@ contains
             dzmm(c,nlevbed+1) = (1.e3_r8*zwt(c) - zmm(c,nlevbed))
          end if
       end do
+      
+! lateral flux
+   type (connection_set_type) :: conn
 
+!currently assume the connections are the same for all layers
+   nconn=endc-begc
+   allocate(conn%grid_id_up(nconn))
+   allocate(conn%grid_id_dn(nconn))
+   allocate(conn%area(nconn))
+   allocate(conn%dist(nconn))
+
+   do iconn = 1,nconn
+     g = begg(iconn)
+     conn%grid_id_up(iconn) = g    !... Step-2: Eventually will need to read from surface dataset
+     conn%grid_id_dn(iconn) = g+1  !...         There is already some code that we will be able to
+                                !            use to fill this data structure
+   enddo
+ ! loop over connections: NOT loop over grid cells
+ !do c = begc, endc
+  do iconn = 1:nconn
+   do j = 1, nlev
+	   qflx_lateral(iconn,j) = 0._r8
+   endo
+  enddo
+  do iconn = 1, nconn
+	  grid_id_up = conn(iconn)%grid_up; !g1
+	  grid_id_dn = conn(iconn)%grid_dn; !g2
+	
+	  col_id_up = get_natveg_column_id(grid_id_up,col_id)   
+	  col_id_dn = get_natveg_column_id(grid_id_dn,col_id)
+    do j = 1, nlev
+        ! up --> dn
+	      ! dzq    = (zq(c,j)-zq(c,j-1))
+	      ! num    = (smp(c,j)-smp(c,j-1)) - dzq
+        ! qin(c,j)    = -hk(c,j-1)*num/den
+       	! dzq    = (zq(c,j+1)-zq(c,j))
+        ! num    = (smp(c,j+1)-smp(c,j)) - dzq
+        ! qout(c,j)   = -hk(c,j)*num/den
+	      dz=  topo -topo   !gravity potential here is the elevation change
+	!hydraulic conductivity hkl(iconn,j) is
+        !the lateral hydraulic conductivity is calculated using the geometric mean of the 
+        !neighbouring lateral cells and is approximated as 1000 times of the vertical hydraulic conductivity
+             s1 = 0.5_r8*(h2osoi_vol(col_id_up,j) + h2osoi_vol(col_id_dn,j))) / &
+                    (0.5_r8*(watsat(col_id_up,j)+watsat(col_id_dn,j)))
+         
+            s1 = min(1._r8, s1)
+	    bswl = bsw(c,j)+bsw(c,j)
+            s2 = sqrt(hksat(col_id_up,j), hksat(col_id_dn,j))*s1**(2._r8*bsw(c,j)+2._r8)
+
+            ! replace fracice with impedance factor, as in zhao 97,99
+            !if (origflag == 1) then
+            !   imped(c,j)=(1._r8-0.5_r8*(fracice(c,j)+fracice(c,min(nlevsoi, j+1))))
+            !else
+               imped(iconn,j)=10._r8**(-e_ice*(0.5_r8*(icefrac(col_id_up,j)+icefrac(col_id_dn,j))))
+            !endif
+            hkl(iconn,j) = imped(c,j)*s1*s2*1000.0_r8
+            qflx_up_to_dn = hkl(iconn,j)(smp(col_id_up,j) - smp(col_id_dn,j) + dzl) ! dzl is the height difference between two neighbouring lateral cells
+            qflx_lateral(col_id_up,j) = qflx_lateral(col_id_up,j) - qflx_up_to_dn
+            qflx_lateral(col_id_dn,j) = qflx_lateral(col_id_dn,j) + qflx_up_to_dn
+    enddo
+enddo
+      
       ! Set up r, a, b, and c vectors for tridiagonal solution
 
       ! Node j=1 (top)
@@ -859,7 +921,7 @@ contains
      use decompMod                 , only : bounds_type
      use elm_varcon                , only : denh2o
      use elm_varpar                , only : nlevsoi, max_patch_per_col, nlevgrnd
-      use clm_time_manager          , only : get_step_size
+     use clm_time_manager          , only : get_step_size
      use SoilStateType             , only : soilstate_type
      use SoilHydrologyType         , only : soilhydrology_type
      use TemperatureType           , only : temperature_type
