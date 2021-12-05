@@ -1,16 +1,15 @@
 module Connection_module
 
-
-  implicit none
-
-private
-  type, public :: connection_set_type
+implicit none
+save
+public
+  
+type, public :: connection_set_type
     Integer, pointer :: id_up(:)      ! list of ids of upwind cells
     Integer, pointer :: id_dn(:)      ! list of ids of downwind cells
     Real, pointer :: dist(:)    ! list of distance vectors
     Real, pointer :: area(:)      ! list of areas of faces normal to distance vectors
-
-  end type connection_set_type
+end type connection_set_type
 
 public :: get_natveg_column_id 
  
@@ -26,7 +25,5 @@ function get_natveg_column_id(id) result(id_out)
 
 
 end function get_natveg_column_id
-
-
 
 end module Connection_module
