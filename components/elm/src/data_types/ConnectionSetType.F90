@@ -24,17 +24,19 @@ contains
 subroutine col_connect(this, begc, endc)
 
    Integer, intent(in) begc, endc
-   Integer, nconn
-   class(connection_set_type) :: this  
+   Integer, nconn, iconn                                             !
+   nconn = nconn=endc-begc                                           ! number of connections in each layer
+   class(connection_set_type)       :: this                          !
    allocate(this%grid_id_up(nconn)) ;  this%grid_id_up(:) = nan
    allocate(this%grid_id_dn(nconn)) ;  this%grid_id_dn(:) = nan
    allocate(this%area(nconn))       ;  this%area(:) = nan
    allocate(this%dist(nconn))       ;  this%dist(:) = nan
+   
    do iconn = 1,nconn
      g = begg(iconn)
-     conn%grid_id_up(iconn) = g    !... Step-2: Eventually will need to read from surface dataset
-     conn%grid_id_dn(iconn) = g+1  !...         There is already some code that we will be able to
-                                !            use to fill this data structure
+     conn%grid_id_up(iconn) = g    !  Step-2: Eventually will need to read from surface dataset
+     conn%grid_id_dn(iconn) = g+1  !  There is already some code that we will be able to
+                                   !  use to fill this data structure
    enddo
 end subroutine col_connect
 
