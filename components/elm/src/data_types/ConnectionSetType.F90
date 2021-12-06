@@ -6,12 +6,12 @@ save
 public
   
 type, public :: connection_set_type
-    Integer, pointer :: id_up(:)      ! list of ids of upwind cells
-    Integer, pointer :: id_dn(:)      ! list of ids of downwind cells
-    Real(r8), pointer :: dist(:)    ! list of distance vectors
-    Real, pointer :: area(:)      ! list of areas of faces normal to distance vectors
+    Integer, pointer :: id_up(:)   => null()      ! list of ids of upwind cells
+    Integer, pointer :: id_dn(:)   => null()      ! list of ids of downwind cells
+    Real(r8), pointer :: dist(:)   => null()      ! list of distance vectors
+    Real(r8), pointer :: area(:)   => null()      ! list of areas of faces normal to distance vectors
 contains
-    procedure, public :: connect => col_connect
+    procedure, public :: Init => col_connect_init
 end type connection_set_type
 
 public :: get_natveg_column_id 
@@ -21,22 +21,28 @@ type (connection_set_type), public, target :: conn   ! connection type
 contains
 
 ! ************************************************************************** !
-subroutine col_connect(this, begc, endc)
+subroutine col_connect_init(this, bounds)
 
-   Integer, intent(in) begc, endc
-   Integer, nconn, iconn                                             !
-   nconn = nconn=endc-begc                                           ! number of connections in each layer
-   class(connection_set_type)       :: this                          !
+   type(bounds_type), intent(in)    :: bounds
+   class(connection_set_type)       :: this 
+   Integer                          :: nconn, iconn,begc,endc,begg, endg  
+   Integer                          :: dx, dz
+   begc = bounds%begs;  endc = bounds%endc!
+   begg = bounds%begg;  endg = bounds%endg
+   nconn = endc-begc                                           ! number of connections in each layer
+   
    allocate(this%grid_id_up(nconn)) ;  this%grid_id_up(:) = nan
    allocate(this%grid_id_dn(nconn)) ;  this%grid_id_dn(:) = nan
    allocate(this%area(nconn))       ;  this%area(:) = nan
    allocate(this%dist(nconn))       ;  this%dist(:) = nan
-   
+   dx = 1000
+   dz = topo
    do iconn = 1,nconn
-     g = begg(iconn)
-     conn%grid_id_up(iconn) = g    !  Step-2: Eventually will need to read from surface dataset
-     conn%grid_id_dn(iconn) = g+1  !  There is already some code that we will be able to
-                                   !  use to fill this data structure
+     g = bounds%begg(iconn)
+     this%grid_id_up(iconn) = g    !  Step-2: Eventually will need to read from surface dataset
+     this%grid_id_dn(iconn) = g+1  !  There is already some code that we will be able to
+     this%area(iconn)       =      !  use to fill this data structure
+     this%dist(iconn)       =      ! triangle law
    enddo
 end subroutine col_connect
 
