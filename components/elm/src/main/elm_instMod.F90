@@ -464,6 +464,8 @@ contains
     call cnstate_vars%Init(bounds_proc)
 
     call sedflux_vars%Init(bounds_proc)
+    
+    call conn%Init(bounds_proc)
     ! --------------------------------------------------------------
     ! Initialise the BeTR
     ! --------------------------------------------------------------
