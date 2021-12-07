@@ -282,7 +282,8 @@ contains
     use SoilHydrologyType    , only : soilhydrology_type
     use VegetationType       , only : veg_pp
     use ColumnType           , only : col_pp
-    use Connection_module    , only :: connection_set_type
+    use Connection_module    , only : conn, get_natveg_column_id
+    use GridcellType         , only : grc_pp
     !
     ! !ARGUMENTS:
     implicit none
@@ -576,18 +577,9 @@ contains
             dzmm(c,nlevbed+1) = (1.e3_r8*zwt(c) - zmm(c,nlevbed))
          end if
       end do
-      
-! lateral flux
-   type (connection_set_type) :: conn
-
-!currently assume the connections are the same for all layers
-   nconn=endc-begc
-   allocate(conn%grid_id_up(nconn))
-   allocate(conn%grid_id_dn(nconn))
-   allocate(conn%area(nconn))
-   allocate(conn%dist(nconn))
-
-   do iconn = 1,nconn
+  
+ ! Lateral flow 
+   do iconn = 1,conn%nconn
      g = begg(iconn)
      conn%grid_id_up(iconn) = g    !... Step-2: Eventually will need to read from surface dataset
      conn%grid_id_dn(iconn) = g+1  !...         There is already some code that we will be able to
@@ -595,7 +587,7 @@ contains
    enddo
  ! loop over connections: NOT loop over grid cells
  !do c = begc, endc
-  do iconn = 1:nconn
+  do iconn = 1:conn%nconn
    do j = 1, nlev
 	   qflx_lateral(iconn,j) = 0._r8
    endo
@@ -606,6 +598,9 @@ contains
 	
 	  col_id_up = get_natveg_column_id(grid_id_up,col_id)   
 	  col_id_dn = get_natveg_column_id(grid_id_dn,col_id)
+	  dz=  grc_pp%elevation(grid_id_up) - grc_pp%elevation(grid_id_dn)  !gravity potential here is the elevation change
+	                                                                    !it's the same for all the neighboring up-down layers 
+									    !in a grid since the vertical discretization is the same
     do j = 1, nlev
         ! up --> dn
 	      ! dzq    = (zq(c,j)-zq(c,j-1))
@@ -614,7 +609,7 @@ contains
        	! dzq    = (zq(c,j+1)-zq(c,j))
         ! num    = (smp(c,j+1)-smp(c,j)) - dzq
         ! qout(c,j)   = -hk(c,j)*num/den
-	      dz=  topo -topo   !gravity potential here is the elevation change
+	      
 	!hydraulic conductivity hkl(iconn,j) is
         !the lateral hydraulic conductivity is calculated using the geometric mean of the 
         !neighbouring lateral cells and is approximated as 1000 times of the vertical hydraulic conductivity
