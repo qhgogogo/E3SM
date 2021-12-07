@@ -660,7 +660,7 @@ enddo
          qout(c,j)   = -hk(c,j)*num/den
          dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
          dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-         rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral(c,j)
+         rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral(c,j)/dx*dz(c,j)
          amx(c,j) =  0._r8
          bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1(c,j)
          cmx(c,j) =  dqodw2(c,j)
@@ -684,7 +684,7 @@ enddo
             qout(c,j)   = -hk(c,j)*num/den
             dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
             dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-            rmx(c,j)    =  qin(c,j) - qout(c,j) -  qflx_rootsoi_col(c,j) + qflx_lateral(c,j)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) -  qflx_rootsoi_col(c,j) + qflx_lateral(c,j)/dx*dz(c,j)
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  dqodw2(c,j)
@@ -706,7 +706,7 @@ enddo
             dqidw1(c,j) = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
             qout(c,j)   =  0._r8
             dqodw1(c,j) =  0._r8
-            rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral(c,j)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral(c,j)/dx*dz(c,j)
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  0._r8
