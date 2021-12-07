@@ -5,7 +5,7 @@ module SoilWaterMovementMod
   ! module contains different subroutines to couple soil and root water interactions
   !
   ! created by Jinyun Tang, Mar 12, 2014
-  ! added variable DTB option for Zeng-Decker, Michael A. Brunke, Aug. 25, 2016
+  ! added variable DTB option for Zeng-Decker, Michaelf A. Brunke, Aug. 25, 2016
   !
   use ColumnDataType    , only : col_es, col_ws, col_wf
   use VegetationDataType, only : veg_wf
@@ -350,7 +350,7 @@ contains
     !variables for lateral flow
     integer  :: g, iconn                                     !connections referred grid indices and connection indices
     integer  :: grid_id_up, grid_id_dn, col_id_up, col_id_dn !up and down stream grid indices and column indices
-    real(r8) :: qflux_lateral, qflux_up_to_dn                !lateral flux, lateral flux for each interface [mm h2o/s]
+    real(r8) :: qflx_lateral, qflx_up_to_dn                !lateral flux, lateral flux for each interface [mm h2o/s]
     real(r8) :: dzg, dzgmm                                   !eletation change between neighbor grids [m, mm]  
     real(r8) :: hkl                                          !lateral hydraulic conductivity [mm h2o/s]
     real(r8) :: bswl                                         !lateral bsw, set it temporary
