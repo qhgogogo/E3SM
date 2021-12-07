@@ -347,6 +347,15 @@ contains
     real(r8) :: dsmpds                                       !temporary variable
     real(r8) :: dhkds                                        !temporary variable
     real(r8) :: hktmp                                        !temporary variable
+    !variables for lateral flow
+    integer  :: g, iconn                                     !connections referred grid indices and connection indices
+    integer  :: grid_id_up, grid_id_dn, col_id_up, col_id_dn !up and down stream grid indices and column indices
+    real(r8) :: qflux_lateral, qflux_up_to_dn                !lateral flux, lateral flux for each interface [mm h2o/s]
+    real(r8) :: dzg, dzgmm                                   !eletation change between neighbor grids [m, mm]  
+    real(r8) :: hkl                                          !lateral hydraulic conductivity [mm h2o/s]
+    real(r8) :: bswl                                         !lateral bsw, set it temporary
+    real(r8) :: impedl(1:conn%nconn, 1:nlevgrnd)             !lateral imped
+    real(r8) :: dx = 1000.0_r8                               !dx [m]
     !-----------------------------------------------------------------------
 
     associate(&
@@ -590,17 +599,19 @@ contains
   do iconn = 1:conn%nconn
    do j = 1, nlev
 	   qflx_lateral(iconn,j) = 0._r8
-   endo
-  enddo
+	   dzg(iconn,j) =  grc_pp%elevation(grid_id_up) - grc_pp%elevation(grid_id_dn)  !gravity potential here is the elevation change
+	                                                                    !it's the same for all the neighboring up-down layers 
+									    !in a grid since the vertical discretization is the same
+           dzgmm(iconn,j) = dzg(iconn,j)*1000._r8	
+   end do
+  end do
   do iconn = 1, nconn
 	  grid_id_up = conn(iconn)%grid_up; !g1
 	  grid_id_dn = conn(iconn)%grid_dn; !g2
 	
 	  col_id_up = get_natveg_column_id(grid_id_up,col_id)   
 	  col_id_dn = get_natveg_column_id(grid_id_dn,col_id)
-	  dz=  grc_pp%elevation(grid_id_up) - grc_pp%elevation(grid_id_dn)  !gravity potential here is the elevation change
-	                                                                    !it's the same for all the neighboring up-down layers 
-									    !in a grid since the vertical discretization is the same
+	 						    
     do j = 1, nlev
         ! up --> dn
 	      ! dzq    = (zq(c,j)-zq(c,j-1))
@@ -613,21 +624,23 @@ contains
 	!hydraulic conductivity hkl(iconn,j) is
         !the lateral hydraulic conductivity is calculated using the geometric mean of the 
         !neighbouring lateral cells and is approximated as 1000 times of the vertical hydraulic conductivity
-             s1 = 0.5_r8*(h2osoi_vol(col_id_up,j) + h2osoi_vol(col_id_dn,j))) / &
+            s1 = 0.5_r8*(h2osoi_vol(col_id_up,j) + h2osoi_vol(col_id_dn,j))) / &
                     (0.5_r8*(watsat(col_id_up,j)+watsat(col_id_dn,j)))
          
             s1 = min(1._r8, s1)
-	    bswl = bsw(c,j)+bsw(c,j)
-            s2 = sqrt(hksat(col_id_up,j), hksat(col_id_dn,j))*s1**(2._r8*bsw(c,j)+2._r8)
+	    bswl = (bsw(col_id_up,j)+bsw(col_id_dn,j))/2
+            s2 = sqrt(hksat(col_id_up,j), hksat(col_id_dn,j))*s1**(2._r8*bswl+2._r8)
 
             ! replace fracice with impedance factor, as in zhao 97,99
-            !if (origflag == 1) then
-            !   imped(c,j)=(1._r8-0.5_r8*(fracice(c,j)+fracice(c,min(nlevsoi, j+1))))
-            !else
-               imped(iconn,j)=10._r8**(-e_ice*(0.5_r8*(icefrac(col_id_up,j)+icefrac(col_id_dn,j))))
-            !endif
-            hkl(iconn,j) = imped(c,j)*s1*s2*1000.0_r8
-            qflx_up_to_dn = hkl(iconn,j)(smp(col_id_up,j) - smp(col_id_dn,j) + dzl) ! dzl is the height difference between two neighbouring lateral cells
+            if (origflag == 1) then
+               impedl(iconn,j)=(1._r8-0.5_r8*(fracice(col_id_up,j)+fracice(col_id_dn,j)))
+            else
+               impedl(iconn,j)=10._r8**(-e_ice*(0.5_r8*(icefrac(col_id_up,j)+icefrac(col_id_dn,j))))
+            endif
+	  
+            hkl(iconn,j) = impedl(c,j)*s1*s2*1000.0_r8
+	    den=sqrt(dzgmm(iconn,j)**2+ (dx*1000.0_r8)**2)
+            qflx_up_to_dn = hkl(iconn,j)*(smp(col_id_up,j) - smp(col_id_dn,j) + dzgmm)/den !
             qflx_lateral(col_id_up,j) = qflx_lateral(col_id_up,j) - qflx_up_to_dn
             qflx_lateral(col_id_dn,j) = qflx_lateral(col_id_dn,j) + qflx_up_to_dn
     enddo
@@ -647,7 +660,7 @@ enddo
          qout(c,j)   = -hk(c,j)*num/den
          dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
          dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-         rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)
+         rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral(c,j)
          amx(c,j) =  0._r8
          bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1(c,j)
          cmx(c,j) =  dqodw2(c,j)
@@ -671,7 +684,7 @@ enddo
             qout(c,j)   = -hk(c,j)*num/den
             dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
             dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-            rmx(c,j)    =  qin(c,j) - qout(c,j) -  qflx_rootsoi_col(c,j)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) -  qflx_rootsoi_col(c,j) + qflx_lateral(c,j)
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  dqodw2(c,j)
@@ -693,7 +706,7 @@ enddo
             dqidw1(c,j) = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
             qout(c,j)   =  0._r8
             dqodw1(c,j) =  0._r8
-            rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral(c,j)
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  0._r8
@@ -766,7 +779,7 @@ enddo
             end if
          endif
       end do
-
+    
       ! Solve for dwat
 
       jtop(bounds%begc : bounds%endc) = 1
