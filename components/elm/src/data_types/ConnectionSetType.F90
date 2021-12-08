@@ -41,20 +41,20 @@ subroutine col_connect_init(this, bounds)
      g = bounds%begg(iconn)
      this%grid_id_up(iconn) = g    !  Step-2: Eventually will need to read from surface dataset
      this%grid_id_dn(iconn) = g+1  !  There is already some code that we will be able to
-     this%area(iconn)       =      !  use to fill this data structure
-     this%dist(iconn)       =      ! triangle law
+     this%area(iconn)       = 1000     !  use to fill this data structure, temporary value now
+     this%dist(iconn)       = 1000     ! triangle law, temporary value now
    enddo
 end subroutine col_connect
 
-function get_natveg_column_id(id) result(id_out)
+  function get_natveg_column_id(id) result(id_out)
 
-  implicit none
-  integer, intent(in) :: id
-  integer, id_out
-  id_out=id ! for 2D transect only 
+    implicit none
+    integer, intent(in) :: id
+    integer ::id_out
+    id_out=id ! for 2D transect only 
+  
+  end function get_natveg_column_id
 
-
-end function get_natveg_column_id
 end module Connection_module
 
 
