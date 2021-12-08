@@ -7,8 +7,8 @@ save
 public
   
 type, public :: connection_set_type
-    Integer, pointer :: id_up(:)   => null()      ! list of ids of upwind cells
-    Integer, pointer :: id_dn(:)   => null()      ! list of ids of downwind cells
+    Integer, pointer :: grid_id_up(:)   => null()      ! list of ids of upwind cells
+    Integer, pointer :: grid_id_dn(:)   => null()      ! list of ids of downwind cells
     Real(r8), pointer :: dist(:)   => null()      ! list of distance vectors
     Real(r8), pointer :: area(:)   => null()      ! list of areas of faces normal to distance vectors
 contains
@@ -28,7 +28,7 @@ subroutine col_connect_init(this, bounds)
    class(connection_set_type)       :: this 
    Integer                          :: nconn, iconn,begc,endc,begg, endg  
    Integer                          :: dx, dz
-   begc = bounds%begs;  endc = bounds%endc!
+   begc = bounds%begc;  endc = bounds%endc!
    begg = bounds%begg;  endg = bounds%endg
    nconn = endc-begc                                           ! number of connections in each layer
    
@@ -36,8 +36,8 @@ subroutine col_connect_init(this, bounds)
    allocate(this%grid_id_dn(nconn)) ;  this%grid_id_dn(:) = nan
    allocate(this%area(nconn))       ;  this%area(:) = nan
    allocate(this%dist(nconn))       ;  this%dist(:) = nan
-   dx = 1000
-   dz = topo
+   dx = 1000  ! temporary
+   dz = 1000  ! temporary
    do iconn = 1,nconn
      g = bounds%begg(iconn)
      this%grid_id_up(iconn) = g    !  Step-2: Eventually will need to read from surface dataset
