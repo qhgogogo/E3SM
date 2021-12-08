@@ -27,7 +27,7 @@ subroutine col_connect_init(this, bounds)
 
    type(bounds_type), intent(in)    :: bounds
    class(connection_set_type)       :: this 
-   Integer                          :: nconn, iconn,begc(:),endc(:),begg(:), endg(:)  
+   Integer                          :: nconn, iconn,begc,endc,begg, endg 
    Integer                          :: dx, dz, g
    begc = bounds%begc;  endc = bounds%endc!
    begg = bounds%begg;  endg = bounds%endg
@@ -40,7 +40,7 @@ subroutine col_connect_init(this, bounds)
    dx = 1000  ! temporary
    dz = 1000  ! temporary
    do iconn = 1,nconn
-     g = begg(iconn)
+     g = begg+iconn-1
      this%grid_id_up(iconn) = g    !  Step-2: Eventually will need to read from surface dataset
      this%grid_id_dn(iconn) = g+1  !  There is already some code that we will be able to
      this%area(iconn)       = 1000     !  use to fill this data structure, temporary value now
