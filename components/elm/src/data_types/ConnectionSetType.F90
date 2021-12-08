@@ -1,6 +1,7 @@
 module Connection_module
 
 use shr_kind_mod   , only : r8 => shr_kind_r8
+use shr_infnan_mod  , only : isnan => shr_infnan_isnan,nan => shr_infnan_nan, assignment(=)
 use decompMod      , only : bounds_type
 implicit none
 save
@@ -27,7 +28,7 @@ subroutine col_connect_init(this, bounds)
    type(bounds_type), intent(in)    :: bounds
    class(connection_set_type)       :: this 
    Integer                          :: nconn, iconn,begc,endc,begg, endg  
-   Integer                          :: dx, dz
+   Integer                          :: dx, dz, g
    begc = bounds%begc;  endc = bounds%endc!
    begg = bounds%begg;  endg = bounds%endg
    nconn = endc-begc                                           ! number of connections in each layer
