@@ -130,6 +130,7 @@ module elm_instMod
   type(hlm_fates_interface_type)                      :: alm_fates
   class(betr_simulation_alm_type), pointer            :: ep_betr
   type(PlantMicKinetics_type)                         :: PlantMicKinetics_vars
+  type(connection_set_type)                           :: conn
   public :: elm_inst_biogeochem
   public :: elm_inst_biogeophys
   public :: alm_fates
