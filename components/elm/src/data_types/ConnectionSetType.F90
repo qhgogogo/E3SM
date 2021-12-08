@@ -1,6 +1,7 @@
 module Connection_module
 
 use shr_kind_mod   , only : r8 => shr_kind_r8
+use decompMod      , only : bounds_type
 implicit none
 save
 public
