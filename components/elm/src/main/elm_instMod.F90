@@ -75,6 +75,7 @@ module elm_instMod
   use BeTRSimulationALM          , only : betr_simulation_alm_type
   use PlantMicKineticsMod        , only : PlantMicKinetics_type
   use ELMFatesInterfaceMod       , only : hlm_fates_interface_type
+  use Connection_module          , only : connection_set_type
 
   ! instances declared in their own modules
   use UrbanParamsType            , only : urbanparams_vars
