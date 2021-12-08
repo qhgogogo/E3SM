@@ -5,7 +5,7 @@ module SoilWaterMovementMod
   ! module contains different subroutines to couple soil and root water interactions
   !
   ! created by Jinyun Tang, Mar 12, 2014
-  ! added variable DTB option for Zeng-Decker, Michaelf A. Brunke, Aug. 25, 2016
+  ! added variable DTB option for Zeng-Decker, Michael A. Brunke, Aug. 25, 2016
   !
   use ColumnDataType    , only : col_es, col_ws, col_wf
   use VegetationDataType, only : veg_wf
