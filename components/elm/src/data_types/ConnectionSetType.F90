@@ -8,6 +8,7 @@ save
 public
   
 type, public :: connection_set_type
+    Integer, pointer :: nconn(:)   => null()           ! number of connections
     Integer, pointer :: grid_id_up(:)   => null()      ! list of ids of upwind cells
     Integer, pointer :: grid_id_dn(:)   => null()      ! list of ids of downwind cells
     Real(r8), pointer :: dist(:)   => null()      ! list of distance vectors
@@ -27,19 +28,19 @@ subroutine col_connect_init(this, bounds)
 
    type(bounds_type), intent(in)    :: bounds
    class(connection_set_type)       :: this 
-   Integer                          :: nconn, iconn,begc,endc,begg, endg 
+   Integer                          :: n, iconn,begc,endc,begg, endg 
    Integer                          :: dx, dz, g
    begc = bounds%begc;  endc = bounds%endc!
    begg = bounds%begg;  endg = bounds%endg
-   nconn = endc-begc                                           ! number of connections in each layer
-   
+   n = endc-begc                                      ! number of connections in each layer
+   allocate(this%nconn);             ; this%nconn = n      
    allocate(this%grid_id_up(nconn)) ;  this%grid_id_up(:) = 0  !nan not working use huge(1)?
    allocate(this%grid_id_dn(nconn)) ;  this%grid_id_dn(:) = 0
    allocate(this%area(nconn))       ;  this%area(:) = 0   !nan
    allocate(this%dist(nconn))       ;  this%dist(:) = 0   !nan 
    dx = 1000  ! temporary
    dz = 1000  ! temporary
-   do iconn = 1,nconn
+   do iconn = 1,n
      g = begg+iconn-1
      this%grid_id_up(iconn) = g    !  Step-2: Eventually will need to read from surface dataset
      this%grid_id_dn(iconn) = g+1  !  There is already some code that we will be able to
