@@ -350,7 +350,7 @@ contains
     !variables for lateral flow
     integer  :: g, iconn                                     !connections referred grid indices and connection indices
     integer  :: grid_id_up, grid_id_dn, col_id_up, col_id_dn !up and down stream grid indices and column indices
-    real(r8) :: qflx_lateral_s(1:conn%nconn:,1:nlevsoi), qflx_up_to_dn           !lateral flux in unsaturated soil, lateral flux for each interface [mm h2o/s]
+    real(r8) :: qflx_lateral_s(1:conn%nconn,1:nlevsoi), qflx_up_to_dn           !lateral flux in unsaturated soil, lateral flux for each interface [mm h2o/s]
     real(r8) :: dzg(1:conn%nconn,1:nlevsoi), dzgmm(1:conn%nconn,1:nlevsoi)                         !eletation change between neighbor grids [m, mm]  
     real(r8) :: hkl(1:conn%nconn,1:nlevsoi)                                          !lateral hydraulic conductivity [mm h2o/s]
     real(r8) :: bswl                                         !lateral bsw, set it temporary
@@ -619,7 +619,7 @@ contains
 	!hydraulic conductivity hkl(iconn,j) is
         !the lateral hydraulic conductivity is calculated using the geometric mean of the 
         !neighbouring lateral cells and is approximated as 1000 times of the vertical hydraulic conductivity
-            s1 = 0.5_r8*(h2osoi_vol(col_id_up,j) + h2osoi_vol(col_id_dn,j))) / &
+            s1 = 0.5_r8*(h2osoi_vol(col_id_up,j) + h2osoi_vol(col_id_dn,j)) / &
                     (0.5_r8*(watsat(col_id_up,j)+watsat(col_id_dn,j)))
          
             s1 = min(1._r8, s1)
@@ -636,8 +636,8 @@ contains
             hkl(iconn,j) = impedl(c,j)*s1*s2*1000.0_r8
 	    den=sqrt(dzgmm(iconn,j)**2+ (dx*1000.0_r8)**2)
             qflx_up_to_dn = hkl(iconn,j)*(smp(col_id_up,j) - smp(col_id_dn,j) + dzgmm(iconn,j))/den !
-            qflx_lateral_s(col_id_up,j) = qflx_lateral(col_id_up,j) - qflx_up_to_dn
-            qflx_lateral_s(col_id_dn,j) = qflx_lateral(col_id_dn,j) + qflx_up_to_dn
+            qflx_lateral_s(col_id_up,j) = qflx_lateral_s(col_id_up,j) - qflx_up_to_dn
+            qflx_lateral_s(col_id_dn,j) = qflx_lateral_s(col_id_dn,j) + qflx_up_to_dn
     enddo
 enddo
       
