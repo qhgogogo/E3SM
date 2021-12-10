@@ -635,7 +635,7 @@ contains
 	  
             hkl(iconn,j) = impedl(c,j)*s1*s2*1000.0_r8
 	    den=sqrt(dzgmm(iconn,j)**2+ (dx*1000.0_r8)**2)
-            qflx_up_to_dn = hkl(iconn,j)*(smp(col_id_up,j) - smp(col_id_dn,j) + dzgmm)/den !
+            qflx_up_to_dn = hkl(iconn,j)*(smp(col_id_up,j) - smp(col_id_dn,j) + dzgmm(iconn,j))/den !
             qflx_lateral_s(col_id_up,j) = qflx_lateral(col_id_up,j) - qflx_up_to_dn
             qflx_lateral_s(col_id_dn,j) = qflx_lateral(col_id_dn,j) + qflx_up_to_dn
     enddo
