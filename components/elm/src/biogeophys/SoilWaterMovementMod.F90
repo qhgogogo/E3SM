@@ -1,7 +1,7 @@
 module SoilWaterMovementMod
 
   !-----------------------------------------------------------------------
-  ! DESCRIPTION
+  ! DESCRIPTIONa
   ! module contains different subroutines to couple soil and root water interactions
   !
   ! created by Jinyun Tang, Mar 12, 2014
@@ -591,7 +591,7 @@ contains
  ! loop over connections: NOT loop over grid cells
  !do c = begc, endc
   do iconn = 1,conn%nconn
-   do j = 1, nlevbed
+   do j = 1, nlevsoi
 	   qflx_lateral_s(iconn,j) = 0._r8
 	   dzg(iconn,j) =  grc_pp%elevation(grid_id_up) - grc_pp%elevation(grid_id_dn)  !gravity potential here is the elevation change
 	                                                                    !it's the same for all the neighboring up-down layers 
@@ -601,7 +601,7 @@ contains
   end do
 
   do iconn = 1, conn%nconn	 						    
-    do j = 1, nlevbed
+    do j = 1, nlevsoi
     
          grid_id_up = conn%grid_id_up(iconn); !g1
          grid_id_dn = conn%grid_id_dn(iconn); !g2
