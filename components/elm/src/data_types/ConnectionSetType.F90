@@ -8,7 +8,7 @@ save
 public
   
 type, public :: connection_set_type
-    Integer, pointer :: nconn(:)   => null()           ! number of connections
+    Integer, pointer :: nconn   => null()           ! number of connections
     Integer, pointer :: grid_id_up(:)   => null()      ! list of ids of upwind cells
     Integer, pointer :: grid_id_dn(:)   => null()      ! list of ids of downwind cells
     Real(r8), pointer :: dist(:)   => null()      ! list of distance vectors
@@ -33,11 +33,11 @@ subroutine col_connect_init(this, bounds)
    begc = bounds%begc;  endc = bounds%endc!
    begg = bounds%begg;  endg = bounds%endg
    n = endc-begc                                      ! number of connections in each layer
-   allocate(this%nconn);             ; this%nconn = n      
-   allocate(this%grid_id_up(nconn)) ;  this%grid_id_up(:) = 0  !nan not working use huge(1)?
-   allocate(this%grid_id_dn(nconn)) ;  this%grid_id_dn(:) = 0
-   allocate(this%area(nconn))       ;  this%area(:) = 0   !nan
-   allocate(this%dist(nconn))       ;  this%dist(:) = 0   !nan 
+   allocate(this%nconn)             ; this%nconn = n      
+   allocate(this%grid_id_up(n)) ;  this%grid_id_up(:) = 0  !nan not working use huge(1)?
+   allocate(this%grid_id_dn(n)) ;  this%grid_id_dn(:) = 0
+   allocate(this%area(n))       ;  this%area(:) = 0   !nan
+   allocate(this%dist(n))       ;  this%dist(:) = 0   !nan 
    dx = 1000  ! temporary
    dz = 1000  ! temporary
    do iconn = 1,n
