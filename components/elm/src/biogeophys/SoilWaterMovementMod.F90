@@ -350,8 +350,8 @@ contains
     !variables for lateral flow
     integer  :: g, iconn                                     !connections referred grid indices and connection indices
     integer  :: grid_id_up, grid_id_dn, col_id_up, col_id_dn !up and down stream grid indices and column indices
-    real(r8) :: qflx_lateral, qflx_up_to_dn                !lateral flux, lateral flux for each interface [mm h2o/s]
-    real(r8) :: dzg, dzgmm                                   !eletation change between neighbor grids [m, mm]  
+    real(r8) :: qflx_lateral_s(:,:), qflx_up_to_dn           !lateral flux in unsaturated soil, lateral flux for each interface [mm h2o/s]
+    real(r8) :: dzg(:,:), dzgmm(:,:)                         !eletation change between neighbor grids [m, mm]  
     real(r8) :: hkl                                          !lateral hydraulic conductivity [mm h2o/s]
     real(r8) :: bswl                                         !lateral bsw, set it temporary
     real(r8) :: impedl(1:conn%nconn, 1:nlevgrnd)             !lateral imped
@@ -589,7 +589,7 @@ contains
   
  ! Lateral flow 
    do iconn = 1,conn%nconn
-     g = begg(iconn)
+     g = bounds%begg(iconn)
      conn%grid_id_up(iconn) = g    !... Step-2: Eventually will need to read from surface dataset
      conn%grid_id_dn(iconn) = g+1  !...         There is already some code that we will be able to
                                 !            use to fill this data structure
@@ -597,25 +597,25 @@ contains
  ! loop over connections: NOT loop over grid cells
  !do c = begc, endc
   do iconn = 1:conn%nconn
-   do j = 1, nlev
-	   qflx_lateral(iconn,j) = 0._r8
+   do j = 1, nlevbed
+	   qflx_lateral_s(iconn,j) = 0._r8
 	   dzg(iconn,j) =  grc_pp%elevation(grid_id_up) - grc_pp%elevation(grid_id_dn)  !gravity potential here is the elevation change
 	                                                                    !it's the same for all the neighboring up-down layers 
 									    !in a grid since the vertical discretization is the same
            dzgmm(iconn,j) = dzg(iconn,j)*1000._r8	
    end do
   end do
-  do iconn = 1, nconn
-	  grid_id_up = conn(iconn)%grid_up; !g1
-	  grid_id_dn = conn(iconn)%grid_dn; !g2
-	
-	  col_id_up = get_natveg_column_id(grid_id_up,col_id)   
-	  col_id_dn = get_natveg_column_id(grid_id_dn,col_id)
-	 						    
+ 
+ grid_id_up = conn%grid_up; !g1
+ grid_id_dn = conn%grid_dn; !g2
+ col_id_up = get_natveg_column_id(grid_id_up,col_id)   
+ col_id_dn = get_natveg_column_id(grid_id_dn,col_id)
+
+  do iconn = 1, conn%nconn	 						    
     do j = 1, nlev
         ! up --> dn
-	      ! dzq    = (zq(c,j)-zq(c,j-1))
-	      ! num    = (smp(c,j)-smp(c,j-1)) - dzq
+	! dzq    = (zq(c,j)-zq(c,j-1))
+	! num    = (smp(c,j)-smp(c,j-1)) - dzq
         ! qin(c,j)    = -hk(c,j-1)*num/den
        	! dzq    = (zq(c,j+1)-zq(c,j))
         ! num    = (smp(c,j+1)-smp(c,j)) - dzq
@@ -660,7 +660,7 @@ enddo
          qout(c,j)   = -hk(c,j)*num/den
          dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
          dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-         rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral(c,j)/dx*dz(c,j)
+         rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral_s(c,j)/dx*dz(c,j)
          amx(c,j) =  0._r8
          bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1(c,j)
          cmx(c,j) =  dqodw2(c,j)
@@ -684,7 +684,7 @@ enddo
             qout(c,j)   = -hk(c,j)*num/den
             dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
             dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-            rmx(c,j)    =  qin(c,j) - qout(c,j) -  qflx_rootsoi_col(c,j) + qflx_lateral(c,j)/dx*dz(c,j)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) -  qflx_rootsoi_col(c,j) + qflx_lateral_s(c,j)/dx*dz(c,j)
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  dqodw2(c,j)
@@ -706,7 +706,7 @@ enddo
             dqidw1(c,j) = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
             qout(c,j)   =  0._r8
             dqodw1(c,j) =  0._r8
-            rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral(c,j)/dx*dz(c,j)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral_s(c,j)/dx*dz(c,j)
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  0._r8
