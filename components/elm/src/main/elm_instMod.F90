@@ -75,7 +75,7 @@ module elm_instMod
   use BeTRSimulationALM          , only : betr_simulation_alm_type
   use PlantMicKineticsMod        , only : PlantMicKinetics_type
   use ELMFatesInterfaceMod       , only : hlm_fates_interface_type
-  use Connection_module          , only : connection_set_type
+  use ConnectionSetType          , only : conn
 
   ! instances declared in their own modules
   use UrbanParamsType            , only : urbanparams_vars
@@ -129,9 +129,8 @@ module elm_instMod
   type(elm_interface_data_type)                       :: elm_interface_data
   type(chemstate_type)                                :: chemstate_vars
   type(hlm_fates_interface_type)                      :: alm_fates
-  class(betr_simulation_alm_type), pointer            :: ep_betr
+  class(betr_simulation_alm_type), pointer            :: ep_betr  
   type(PlantMicKinetics_type)                         :: PlantMicKinetics_vars
-  type(connection_set_type)                           :: conn
   public :: elm_inst_biogeochem
   public :: elm_inst_biogeophys
   public :: alm_fates
@@ -394,6 +393,8 @@ contains
     call grc_es%Init(bounds_proc%begg_all, bounds_proc%endg_all)
     call lun_es%Init(bounds_proc%begl_all, bounds_proc%endl_all)
     call col_es%Init(bounds_proc%begc_all, bounds_proc%endc_all)
+    print *, 'test col_es', col_es%t_soisno 
+
     call veg_es%Init(bounds_proc%begp_all, bounds_proc%endp_all)
 
     call canopystate_vars%init(bounds_proc)
@@ -466,8 +467,9 @@ contains
     call cnstate_vars%Init(bounds_proc)
 
     call sedflux_vars%Init(bounds_proc)
-    
+        
     call conn%Init(bounds_proc)
+   
     ! --------------------------------------------------------------
     ! Initialise the BeTR
     ! --------------------------------------------------------------
