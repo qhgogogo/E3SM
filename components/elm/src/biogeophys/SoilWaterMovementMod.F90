@@ -282,7 +282,7 @@ contains
     use SoilHydrologyType    , only : soilhydrology_type
     use VegetationType       , only : veg_pp
     use ColumnType           , only : col_pp
-    use Connection_module    , only : conn, get_natveg_column_id
+    use ConnectionSetType    , only : conn, get_natveg_column_id
     use GridcellType         , only : grc_pp
     !
     ! !ARGUMENTS:
@@ -347,6 +347,7 @@ contains
     real(r8) :: dsmpds                                       !temporary variable
     real(r8) :: dhkds                                        !temporary variable
     real(r8) :: hktmp                                        !temporary variable
+    
     !variables for lateral flow
     integer  :: g, iconn                                     !connections referred grid indices and connection indices
     integer  :: grid_id_up, grid_id_dn, col_id_up, col_id_dn !up and down stream grid indices and column indices
@@ -391,7 +392,6 @@ contains
          t_soisno          =>    col_es%t_soisno        & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)
          )
 
-
       ! Because the depths in this routine are in mm, use local
       ! variable arrays instead of pointers
 
@@ -415,8 +415,6 @@ contains
          zimm(c,0) = 0.0_r8
          zwtmm(c)  = zwt(c)*1.e3_r8
       end do
-
-
 
       !compute jwt index
       ! The layer index of the first unsaturated layer, i.e., the layer right above
@@ -587,7 +585,6 @@ contains
          end if
       end do
   
-
  ! loop over connections: NOT loop over grid cells
  !do c = begc, endc
   do iconn = 1,conn%nconn
