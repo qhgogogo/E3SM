@@ -284,6 +284,7 @@ contains
     use ColumnType           , only : col_pp
     use ConnectionSetType    , only : conn, get_natveg_column_id
     use GridcellType         , only : grc_pp
+    use TopounitType         , only : top_pp
     !
     ! !ARGUMENTS:
     implicit none
@@ -351,7 +352,7 @@ contains
     !variables for lateral flow
     integer  :: g, iconn                                     !connections referred grid indices and connection indices
     integer  :: grid_id_up, grid_id_dn, col_id_up, col_id_dn !up and down stream grid indices and column indices
-    real(r8) :: qflx_lateral_s(1:conn%nconn,1:nlevsoi), qflx_up_to_dn           !lateral flux in unsaturated soil, lateral flux for each interface [mm h2o/s]
+    real(r8) :: qflx_lateral_s(1:conn%nconn+1,1:nlevsoi), qflx_up_to_dn           !lateral flux in unsaturated soil, lateral flux for each interface [mm h2o/s]
     real(r8) :: dzg(1:conn%nconn,1:nlevsoi), dzgmm(1:conn%nconn,1:nlevsoi)                         !eletation change between neighbor grids [m, mm]  
     real(r8) :: hkl(1:conn%nconn,1:nlevsoi)                                          !lateral hydraulic conductivity [mm h2o/s]
     real(r8) :: bswl                                         !lateral bsw, set it temporary
@@ -586,33 +587,29 @@ contains
       end do
   
  ! loop over connections: NOT loop over grid cells
- !do c = begc, endc
-  do iconn = 1,conn%nconn
-   do j = 1, nlevsoi
-	   qflx_lateral_s(iconn,j) = 0._r8
-	   dzg(iconn,j) =  grc_pp%elevation(grid_id_up) - grc_pp%elevation(grid_id_dn)  !gravity potential here is the elevation change
-	                                                                    !it's the same for all the neighboring up-down layers 
-									    !in a grid since the vertical discretization is the same
-           dzgmm(iconn,j) = dzg(iconn,j)*1000._r8	
-   end do
-  end do
-
-  do iconn = 1, conn%nconn	 						    
+qflx_lateral_s(:,:) = 0._r8
+do iconn = 1, conn%nconn	 						    
     do j = 1, nlevsoi
-    
+         
          grid_id_up = conn%grid_id_up(iconn); !g1
          grid_id_dn = conn%grid_id_dn(iconn); !g2
          col_id_up = get_natveg_column_id(grid_id_up)   
          col_id_dn = get_natveg_column_id(grid_id_dn)
-    
+        ! print *, 'idup', col_id_up
+        ! print *, 'iddn', col_id_dn
         ! up --> dn
 	! dzq    = (zq(c,j)-zq(c,j-1))
 	! num    = (smp(c,j)-smp(c,j-1)) - dzq
         ! qin(c,j)    = -hk(c,j-1)*num/den
        	! dzq    = (zq(c,j+1)-zq(c,j))
         ! num    = (smp(c,j+1)-smp(c,j)) - dzq
-        ! qout(c,j)   = -hk(c,j)*num/den
-	      
+        ! qout(c,j)   = -hk(c,j)*num/den            
+         
+	 !dzg(iconn,j) =  grc_pp%elevation(grid_id_up) - grc_pp%elevation(grid_id_dn)  !gravity potential here is the elevation change
+	                                                                    !it's the same for all the neighboring up-down layers 
+	 dzg(iconn,j) = 30._r8 								    !in a grid since the vertical discretization is the same
+         dzgmm(iconn,j) = dzg(iconn,j)*1000._r8
+
 	!hydraulic conductivity hkl(iconn,j) is
         !the lateral hydraulic conductivity is calculated using the geometric mean of the 
         !neighbouring lateral cells and is approximated as 1000 times of the vertical hydraulic conductivity
@@ -630,14 +627,25 @@ contains
                impedl(iconn,j)=10._r8**(-e_ice*(0.5_r8*(icefrac(col_id_up,j)+icefrac(col_id_dn,j))))
             endif
 	  
-            hkl(iconn,j) = impedl(c,j)*s1*s2*1000.0_r8
+            hkl(iconn,j) = impedl(iconn,j)*s1*s2*1000.0_r8
 	    den=sqrt(dzgmm(iconn,j)**2+ (dx*1000.0_r8)**2)
             qflx_up_to_dn = hkl(iconn,j)*(smp(col_id_up,j) - smp(col_id_dn,j) + dzgmm(iconn,j))/den !
+            
+           if(j==5.and.iconn==9) then
+           !print *, 'iconn qflxpd',iconn,qflx_up_to_dn
+           !print *, 'idup', col_id_up
+           !print *, 'iddn', col_id_dn
+           !print *, 'qflx1', qflx_lateral_s(:,5)
+           !print *, 'smpup', smp(col_id_up,j)
+           !print *, 'smpdn', smp(col_id_dn,j)
+           ! print *,'iconn dzg', iconn, dzgmm(iconn,5)
+           end if
             qflx_lateral_s(col_id_up,j) = qflx_lateral_s(col_id_up,j) - qflx_up_to_dn
             qflx_lateral_s(col_id_dn,j) = qflx_lateral_s(col_id_dn,j) + qflx_up_to_dn
     enddo
 enddo
-      
+      !print *,  'hkl',hkl(:,5)
+      !print *, 'qflx', qflx_lateral_s(:,5)
       ! Set up r, a, b, and c vectors for tridiagonal solution
 
       ! Node j=1 (top)
@@ -747,7 +755,7 @@ enddo
                dqodw2(c,j) = -( hk(c,j)*dsmpdw1 + num*dhkdw(c,j))/den
             end if
 
-            rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)
+            rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j) + qflx_lateral_s(c,j)/dx*dz(c,j)
             amx(c,j) = -dqidw0(c,j)
             bmx(c,j) =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j) =  dqodw2(c,j)
