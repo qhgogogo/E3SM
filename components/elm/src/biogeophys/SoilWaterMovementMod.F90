@@ -588,13 +588,13 @@ contains
   
  ! loop over connections: NOT loop over grid cells
 qflx_lateral_s(:,:) = 0._r8
-do iconn = 1, conn%nconn	 						    
-    do j = 1, nlevsoi
-         
-         grid_id_up = conn%grid_id_up(iconn); !g1
-         grid_id_dn = conn%grid_id_dn(iconn); !g2
-         col_id_up = get_natveg_column_id(grid_id_up)   
-         col_id_dn = get_natveg_column_id(grid_id_dn)
+do iconn = 1, conn%nconn
+       grid_id_up = conn%grid_id_up(iconn); !g1
+       grid_id_dn = conn%grid_id_dn(iconn); !g2
+       col_id_up = get_natveg_column_id(grid_id_up)   
+       col_id_dn = get_natveg_column_id(grid_id_dn)
+       nlevbed = min(nlev2bed(col_id_up),nlev2bed(col_id_up))
+    do j = 1, nlevbed
         ! print *, 'idup', col_id_up
         ! print *, 'iddn', col_id_dn
         ! up --> dn
