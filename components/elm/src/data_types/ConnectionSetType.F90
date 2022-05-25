@@ -1,6 +1,7 @@
 module ConnectionSetType
 !This module is for creating the 2D grid connections for lateral GW flow.
-!Han Qiu 2021.12
+!This setup is hard-coded for converging hillslope case for now
+!Han Qiu 2022.04
 use shr_kind_mod   , only : r8 => shr_kind_r8
 use shr_infnan_mod  , only : isnan => shr_infnan_isnan,nan => shr_infnan_nan, assignment(=)
 use decompMod      , only : bounds_type
