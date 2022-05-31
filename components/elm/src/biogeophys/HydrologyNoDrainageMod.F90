@@ -266,9 +266,9 @@ contains
       !------------------------------------------------------------------------------------
       if (use_pflotran .and. pf_hmode) then
 
-        call WaterTable(bounds, num_hydrononsoic, filter_hydrononsoic, &
-           num_urbanc, filter_urbanc, &
-           soilhydrology_vars, soilstate_vars, dtime)
+       ! call WaterTable(bounds, num_hydrononsoic, filter_hydrononsoic, &
+       !    num_urbanc, filter_urbanc, &
+       !    soilhydrology_vars, soilstate_vars, dtime)
 
       else
       !------------------------------------------------------------------------------------
