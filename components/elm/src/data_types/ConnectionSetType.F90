@@ -1,7 +1,6 @@
 module ConnectionSetType
 !This module is for creating the 2D grid connections for lateral GW flow.
-!This setup is hard-coded for converging hillslope case for now
-!Han Qiu 2022.04
+!Han Qiu 2021.12
 use shr_kind_mod   , only : r8 => shr_kind_r8
 use shr_infnan_mod  , only : isnan => shr_infnan_isnan,nan => shr_infnan_nan, assignment(=)
 use decompMod      , only : bounds_type
@@ -40,7 +39,7 @@ subroutine col_connect_init(this, bounds)
    Integer                          :: g,nx,ny
    !Real(r8)                         :: x(ny+1,nx+1),y(ny+1,nx+1),zh(ny+1,11),dx(ny,nx-1),dy(9,10),dz(ny,nx),slopex(ny,nx-1),slopey(9,10)
    !Real(r8)                         :: x(2,11),y(2,11),zh(2,11),dx(1,9),dy(9,10),dz(1,10),slopex(1,9),slopey(9,10)
-   Real(r8)                         :: x(11,11),y(11,11),zh(11,11),dx(10,9),dy(9,10),dz(10,10),slopex(10,9),slopey(9,10)
+   Real(r8)                         :: x(11,11),y(11,11),zh(11,11),dx(10,9),dy(9,10),dz(10,10),slopex(10,9),slopey(9,10),slopexx(10,10),slopeyy(10,10)
    begc = bounds%begc;  endc = bounds%endc
    begg = bounds%begg;  endg = bounds%endg
    !print *, 'begg', begg
@@ -167,13 +166,16 @@ print *, 'dzg', this%dzg
   do ii = 1, ny
     do jj = 1, nx
       iconn = iconn+1
-      this%vertcos(iconn) = 1._r8/sqrt(1 + slopey(ii,jj)**2) * 1._r8/sqrt(1 + slopex(ii,jj)**2)
+      slopexx(ii,jj) = (zh(ii,jj+1)+zh(ii+1,jj+1)-zh(ii,jj)-zh(ii+1,jj))/(x(ii,jj+1)+x(ii+1,jj+1)-x(ii,jj)-x(ii+1,jj))
+      slopeyy(ii,jj) = (zh(ii+1,jj)+zh(ii+1,jj+1)-zh(ii,jj)-zh(ii,jj+1))/(y(ii+1,jj)+y(ii+1,jj+1)-y(ii,jj)-y(ii,jj+1))
+      this%vertcos(iconn) = 1._r8/sqrt(1 + slopeyy(ii,jj)**2) * 1._r8/sqrt(1 + slopexx(ii,jj)**2)
     enddo
   enddo
  else
     do jj = 1, nx
       iconn = iconn+1
-      this%vertcos(iconn) = 1._r8/sqrt(1 + slopex(ii,jj)**2)
+      slopexx(1,jj) = (zh(1,jj+1)+zh(2,jj+1)-zh(1,jj)-zh(2,jj))/(x(1,jj+1)+x(2,jj+1)-x(1,jj)-x(2,jj))
+      this%vertcos(iconn) = 1._r8/sqrt(1 + slopexx(1,jj)**2)
     enddo
 endif
 print *, 'vertcos',this%vertcos
