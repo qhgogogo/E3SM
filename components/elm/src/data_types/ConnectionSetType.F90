@@ -66,17 +66,17 @@ subroutine col_connect_init(this, bounds)
    do ii = 1, nx+1
      do jj = 1,ny+1
         x (jj , ii) = ii*10-10
-        y (jj , 11-ii+1) = (0.2*(ii-1)+(1-0.02*(ii-1)*2)*(jj-1))*10
-        !y (jj , ii) = jj*10-10
+        y (jj , 11-ii+1) = (0.2*(ii-1)+(1-0.02*(ii-1)*2)*(jj-1))*10 ! converge
+        !y (jj , ii) = (0.2*(ii-1)+(1-0.02*(ii-1)*2)*(jj-1))*10; ! diverge
+        !y (jj , ii) = jj*10-10 !steady slope
      end do
    end do
    print *, 'y', y
    print *, 'x', x
    do ii = 1, nx+1
      do jj = 1,ny+1
-      zh(ii,jj) = 10*SIN(x(ii,jj)*DACOS(-1.D0)/100._r8-DACOS(-1.D0)/2.0_r8)+20._r8+y(ii,jj)/50._r8   
-      !zh(jj,ii) = ii*0.3_r8+10._r8
-      !zh(ii,jj) = 10*SIN(x(ii,jj)*DACOS(-1.D0)/100._r8-DACOS(-1.D0)/2.0_r8)+20._r8  
+      !zh(ii,jj) = 10*SIN(x(ii,jj)*DACOS(-1.D0)/100._r8-DACOS(-1.D0)/2.0_r8)+20._r8+y(ii,jj)/50._r8  !has y slope 
+      zh(ii,jj) = 10*SIN(x(ii,jj)*DACOS(-1.D0)/100._r8-DACOS(-1.D0)/2.0_r8)+20._r8  !no y slope
      end do
    end do
    print *, 'zh', zh
