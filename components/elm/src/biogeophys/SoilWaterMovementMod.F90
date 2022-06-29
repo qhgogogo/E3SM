@@ -933,7 +933,7 @@ contains
          endif
       end do
 
-      ! Water table changes due to qlateral in saturated GW
+    ! Water table changes due to qlateral in saturated GW
     !if(jwt(1)==100) then
     nstep=1
     do step = 1,nstep
@@ -945,37 +945,61 @@ contains
          col_id_dn = get_natveg_column_id(grid_id_dn,bounds)
          den = conn%dist(iconn)*1000._r8
          j = nlevgrnd+1   !lateral flow in saturated zone
-       !hkl(iconn,j) =  sqrt(hksat(col_id_up,j)*hksat(col_id_dn,j))*1000._r8   ! should be multiple layers to the bottom of bedrock
-       depth_up = z(col_id_up,nlevgrnd) - zwt(col_id_up)  ! groundwater head(m) 
-       print *, 'z', z(10,nlevgrnd)
-       depth_down = z(col_id_dn,nlevgrnd) - zwt(col_id_dn) 
+         !hkl(iconn,j) =  sqrt(hksat(col_id_up,j)*hksat(col_id_dn,j))*1000._r8   ! should be multiple layers to the bottom of bedrock
+         depth_up = zi(col_id_up,nlevgrnd) - zwt(col_id_up)  ! groundwater head(m) 
+         depth_down = zi(col_id_dn,nlevgrnd) - zwt(col_id_dn) 
         !depth_up = 15._r8 - zwt(col_id_up)  ! groundwater head(m) bedrock 15m deep
         !depth_down = 15._r8 - zwt(col_id_dn) 
         depth_up = max(depth_up, 0._r8)
         depth_down= max(depth_down, 0._r8)
-       ! calculate transmissivity 
+        ! calculate transmissivity 
         trans = 1.0_r8*sqrt(hksat(col_id_up,15)*hksat(col_id_dn,15))*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s) 
         qflx_up_to_dn = -trans*(depth_down-depth_up+conn%dzg(iconn))*1000._r8/den
-         if(iconn == 1) then
-          print *,'depth_up',depth_up
-          print *,'depth_down',depth_down
-          print *,'qflx_up_to_dn',qflx_up_to_dn
-         !print *,'hksat',hksat(col_id_up,1:16)
-         !print *,'hksat2',hksat(col_id_dn,1:16)
-          print *,'dzg',conn%dzg(iconn)
-        endif
+       if(iconn == 180)  then
+          print *, 'colup', col_id_up
+          print *, 'coldn', col_id_dn
+          print *, 'qflx_updn', qflx_up_to_dn
+       endif
+        if(iconn == 90)  then
+          print *, 'colup', col_id_up
+          print *, 'coldn', col_id_dn
+          print *, 'qflx_updn', qflx_up_to_dn
+       endif
+        if(iconn == 179)  then
+          print *, 'colup', col_id_up
+          print *, 'coldn', col_id_dn
+          print *, 'qflx_updn', qflx_up_to_dn
+       endif
+        if(iconn == 89)  then
+          print *, 'colup', col_id_up
+          print *, 'coldn', col_id_dn
+          print *, 'qflx_updn', qflx_up_to_dn
+       endif
+       
+        if(col_id_up == 100)  then
+          print *, 'colups', col_id_up
+       endif
+       if(col_id_dn == 100)  then
+          print *, 'colupp', col_id_dn
+          print *, 'qflx_up_to_dn', qflx_up_to_dn
+          print *, 'conn%area(iconn)', conn%area(iconn)
+          print *, 'conn%uparea(iconn)', conn%uparea(iconn)
+          print *, 'conn%facecos(iconn)',conn%facecos(iconn)
+          print *, 'conn%vertcos(col_id_dn)',conn%vertcos(col_id_dn)
+       endif
+
        qflx_lateral_s(col_id_up,j) = qflx_lateral_s(col_id_up,j) - qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%uparea(iconn)*conn%facecos(iconn)* conn%vertcos(col_id_up)  !dy = area/dz dz= 1.0m=1000mm
        qflx_lateral_s(col_id_dn,j) = qflx_lateral_s(col_id_dn,j) + qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%downarea(iconn)*conn%facecos(iconn) * conn%vertcos(col_id_dn) 
        !qflx_lateral_s(col_id_up, j) = 0._r8;   ! do not recount the lateral flux if a cell is saturated and under water table
        !qflx_lateral_s(col_id_dn, j) = 0._r8;
        enddo        
-     !print *, 'qflx_lateral_s91', qflx_lateral_s(91,:)
-     !print *, 'qflx_lateral_s92', qflx_lateral_s(92,:)
-     !print *, 'qflx_lateral_s95', qflx_lateral_s(95,:)
-     !print *, 'qflx_lateral_s97', qflx_lateral_s(97,:)
-     !print *, 'qflx_lateral_s98', qflx_lateral_s(98,:)
-     !print *, 'qflx_lateral_s99', qflx_lateral_s(99,:)
-     !print *, 'qflx_lateral_s100', qflx_lateral_s(100,:)
+     print *, 'qflx_lateral_s91', qflx_lateral_s(91,:)
+     print *, 'qflx_lateral_s92', qflx_lateral_s(92,:)
+     print *, 'qflx_lateral_s95', qflx_lateral_s(95,:)
+     print *, 'qflx_lateral_s97', qflx_lateral_s(97,:)
+     print *, 'qflx_lateral_s98', qflx_lateral_s(98,:)
+     print *, 'qflx_lateral_s99', qflx_lateral_s(99,:)
+     print *, 'qflx_lateral_s100', qflx_lateral_s(100,:)
 
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
