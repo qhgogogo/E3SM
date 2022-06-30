@@ -97,6 +97,7 @@ subroutine col_connect_init(this, bounds)
   endif
    print *, 'slopex', slopex
    !print *, 'slopey', slopey
+   slopey=0._r8
    print *, 'dx', dx
    !print *, 'dy', dy
 
