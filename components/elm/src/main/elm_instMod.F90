@@ -392,9 +392,7 @@ contains
 
     call grc_es%Init(bounds_proc%begg_all, bounds_proc%endg_all)
     call lun_es%Init(bounds_proc%begl_all, bounds_proc%endl_all)
-    call col_es%Init(bounds_proc%begc_all, bounds_proc%endc_all)
-    print *, 'test col_es', col_es%t_soisno 
-
+    call col_es%Init(bounds_proc%begc_all, bounds_proc%endc_all) 
     call veg_es%Init(bounds_proc%begp_all, bounds_proc%endp_all)
 
     call canopystate_vars%init(bounds_proc)
