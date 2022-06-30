@@ -786,7 +786,7 @@ contains
              !--  compute possible perched water table *and* groundwater table afterwards
              ! locate perched water table from bottom up starting at frost table
              ! sat_lev is an arbitrary saturation level used to determine perched water table
-             sat_lev=0.9
+             sat_lev=0.99
 
              k_perch=1
              do k=k_frz,1,-1
@@ -1132,7 +1132,7 @@ contains
              !--  compute possible perched water table *and* groundwater table afterwards
              ! locate perched water table from bottom up starting at frost table
              ! sat_lev is an arbitrary saturation level used to determine perched water table
-             sat_lev=0.9
+             sat_lev=0.99
 
              k_perch=1
              do k=k_frz,1,-1
@@ -1761,7 +1761,7 @@ contains
              !--  compute possible perched water table *and* groundwater table afterwards
              ! locate perched water table from bottom up starting at frost table
              ! sat_lev is an arbitrary saturation level used to determine perched water table
-             sat_lev=0.9
+             sat_lev=0.99
 
              k_perch=1
              do k=k_frz,1,-1
