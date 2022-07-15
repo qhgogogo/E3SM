@@ -20,7 +20,7 @@ module elm_initializeMod
   !use readParamsMod    , only : readParameters
   use readParamsMod    , only : readSharedParameters, readPrivateParameters
   use ncdio_pio        , only : file_desc_t
-
+  use GridCellConnectionSetType  , only : conn
   use BeTRSimulationELM, only : create_betr_simulation_elm
   !
   !-----------------------------------------
@@ -489,6 +489,7 @@ contains
     use clm_time_manager      , only : is_restart
     use ELMbetrNLMod          , only : betr_namelist_buffer
     use ELMFatesInterfaceMod  , only: ELMFatesTimesteps
+    use domainLateralMod      , only: ldomain_lateral, domainlateral_init
     !
     ! !ARGUMENTS
     implicit none
@@ -625,6 +626,7 @@ contains
          ptr_col=col_pp%zii, default='inactive')
 
     call elm_inst_biogeophys(bounds_proc)
+    call conn%Init(bounds_proc, ldomain_lateral)
 
     if(use_betr)then
       !allocate memory for betr simulator
