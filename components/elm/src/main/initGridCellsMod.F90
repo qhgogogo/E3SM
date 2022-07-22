@@ -758,7 +758,7 @@ contains
        end_idx = beg_idx + nvals - 1
 
        values(:) = FILL_VALUE
-       call GetValuesForLandunit(l, values)
+       call GetValuesForLandunit(lun_pp, l, values)
 
        data_send(beg_idx:end_idx) = values(1:nvals)
 
@@ -784,7 +784,7 @@ contains
                 l = l + 1
 
                 values(1:nvals) = data_recv(beg_idx:end_idx)
-                call SetValuesForLandunit(l, values)
+                call SetValuesForLandunit(lun_pp, l, values)
 
                 if (lun_pp%itype(l) /= ltype) then
                    l = l - 1
@@ -948,7 +948,7 @@ contains
 
        values(:) = FILL_VALUE
 
-       call GetValuesForColumn(c, values)
+       call GetValuesForColumn(col_pp, c, values)
        data_send(beg_idx:end_idx) = values(1:nvals_col)
 
        ncol(g) = ncol(g) + 1
@@ -979,7 +979,7 @@ contains
              if (data_recv(beg_idx) /= FILL_VALUE .and. col_ltype == ltype) then
                 c         = c + 1
                 values(1:nvals_col) = data_recv(beg_idx:end_idx)
-                call SetValuesForColumn(c, values)
+                call SetValuesForColumn(col_pp, c, values)
 
                 col_pp%landunit(c) = landunit_index(g,ltype) + l_rank - 1
                 col_pp%gridcell(c) = g
@@ -1159,7 +1159,7 @@ contains
 
        values(:) = FILL_VALUE
 
-       call GetValuesForPatch(p, values)
+       call GetValuesForPatch(veg_pp, p, values)
        data_send(beg_idx:end_idx) = values(1:nvals_pft)
 
        npft(g) = npft(g) + 1
@@ -1196,7 +1196,7 @@ contains
 
                 p = p + 1
                 values(1:nvals_pft) = data_recv(beg_idx:end_idx)
-                call SetValuesForPatch(p, values)
+                call SetValuesForPatch(veg_pp, p, values)
 
                 veg_pp%gridcell(p) = g
                 veg_pp%landunit(p) = landunit_index(g,ltype) + l_rank - 1
