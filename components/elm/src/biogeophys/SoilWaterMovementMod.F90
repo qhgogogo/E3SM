@@ -618,8 +618,8 @@ contains
          !if ((j > jwt(col_id_up)).or.(j > jwt(col_id_dn))) then
          !if (j > max(jwt(col_id_dn),jwt(col_id_up))+1) then
            !if ((zwt(col_id_up) < zi(j,col_id_up)).or.(zwt(col_id_dn)< zi(j,col_id_dn))) then
-            qflx_lateral_s(col_id_up, j) = 0._r8;   ! do not recount the lateral flux if a cell is saturated and under water table
-            qflx_lateral_s(col_id_dn, j) = 0._r8;
+            !qflx_lateral_s(col_id_up, j) = 0._r8;   ! do not recount the lateral flux if a cell is saturated and under water table
+            !qflx_lateral_s(col_id_dn, j) = 0._r8;
          else
 
 	   !hydraulic conductivity hkl(iconn,j) is
@@ -708,12 +708,6 @@ contains
             den    = (zmm(c,j) - zmm(c,j-1))
             dzq    = (zq(c,j)-zq(c,j-1))
             num    = (smp(c,j)-smp(c,j-1)) - dzq
-            if(c==10) then
-             print *,'dzq',dzq
-             print *,'smp1',smp(c,j-1)
-             print *,'smp2',smp(c,j)
-             print *,'hk',hk(c,j-1)
-            endif
             qin(c,j)    = -hk(c,j-1)*num/den
             dqidw0(c,j) = -(-hk(c,j-1)*dsmpdw(c,j-1) + num*dhkdw(c,j-1))/den
             dqidw1(c,j) = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
@@ -805,15 +799,9 @@ contains
          endif
       end do
       ! Solve for dwat
-      !print *, 'rmx', rmx(1,1:16)
-
       jtop(bounds%begc : bounds%endc) = 1
       ! Determination of how many layers (nlev2bed) to do for the tridiagonal
       ! at each column
-      !print *, 'dwat2',dwat2(1,1:16)
-      !print *, 'dwat2 84',dwat2(84,1:16)
-      !print *, 'dwat2 16',dwat2(16,1:16)
-      !print *, 'dwat2 100',dwat2(100,1:16)
 
       if (use_var_soil_thick) then
       	 do fc = 1,num_hydrologyc
@@ -839,10 +827,6 @@ contains
               rmx(bounds%begc:bounds%endc, :), &
               dwat2(bounds%begc:bounds%endc, :) )
       end if
-      print *, 'dwat97',dwat2(97,1:16)
-      print *, 'dwat2 98',dwat2(98,1:16)
-      print *, 'dwat2 99',dwat2(99,1:16)
-      print *, 'dwat2 100',dwat2(100,1:16)
 
       ! Renew the mass of liquid water
       ! also compute qcharge from dwat in aquifer layer
@@ -945,61 +929,19 @@ contains
          col_id_dn = get_natveg_column_id(grid_id_dn,bounds)
          den = conn%dist(iconn)*1000._r8
          j = nlevgrnd+1   !lateral flow in saturated zone
-         !hkl(iconn,j) =  sqrt(hksat(col_id_up,j)*hksat(col_id_dn,j))*1000._r8   ! should be multiple layers to the bottom of bedrock
          depth_up = zi(col_id_up,nlevgrnd) - zwt(col_id_up)  ! groundwater head(m) 
          depth_down = zi(col_id_dn,nlevgrnd) - zwt(col_id_dn) 
-        !depth_up = 15._r8 - zwt(col_id_up)  ! groundwater head(m) bedrock 15m deep
-        !depth_down = 15._r8 - zwt(col_id_dn) 
         depth_up = max(depth_up, 0._r8)
         depth_down= max(depth_down, 0._r8)
         ! calculate transmissivity 
         trans = 1.0_r8*sqrt(hksat(col_id_up,15)*hksat(col_id_dn,15))*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s) 
         qflx_up_to_dn = -trans*(depth_down-depth_up+conn%dzg(iconn))*1000._r8/den
-       if(iconn == 180)  then
-          print *, 'colup', col_id_up
-          print *, 'coldn', col_id_dn
-          print *, 'qflx_updn', qflx_up_to_dn
-       endif
-        if(iconn == 90)  then
-          print *, 'colup', col_id_up
-          print *, 'coldn', col_id_dn
-          print *, 'qflx_updn', qflx_up_to_dn
-       endif
-        if(iconn == 179)  then
-          print *, 'colup', col_id_up
-          print *, 'coldn', col_id_dn
-          print *, 'qflx_updn', qflx_up_to_dn
-       endif
-        if(iconn == 89)  then
-          print *, 'colup', col_id_up
-          print *, 'coldn', col_id_dn
-          print *, 'qflx_updn', qflx_up_to_dn
-       endif
-       
-        if(col_id_up == 100)  then
-          print *, 'colups', col_id_up
-       endif
-       if(col_id_dn == 100)  then
-          print *, 'colupp', col_id_dn
-          print *, 'qflx_up_to_dn', qflx_up_to_dn
-          print *, 'conn%area(iconn)', conn%area(iconn)
-          print *, 'conn%uparea(iconn)', conn%uparea(iconn)
-          print *, 'conn%facecos(iconn)',conn%facecos(iconn)
-          print *, 'conn%vertcos(col_id_dn)',conn%vertcos(col_id_dn)
-       endif
-
        qflx_lateral_s(col_id_up,j) = qflx_lateral_s(col_id_up,j) - qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%uparea(iconn)*conn%facecos(iconn)* conn%vertcos(col_id_up)  !dy = area/dz dz= 1.0m=1000mm
        qflx_lateral_s(col_id_dn,j) = qflx_lateral_s(col_id_dn,j) + qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%downarea(iconn)*conn%facecos(iconn) * conn%vertcos(col_id_dn) 
        !qflx_lateral_s(col_id_up, j) = 0._r8;   ! do not recount the lateral flux if a cell is saturated and under water table
        !qflx_lateral_s(col_id_dn, j) = 0._r8;
        enddo        
-     print *, 'qflx_lateral_s91', qflx_lateral_s(91,:)
-     print *, 'qflx_lateral_s92', qflx_lateral_s(92,:)
-     print *, 'qflx_lateral_s95', qflx_lateral_s(95,:)
-     print *, 'qflx_lateral_s97', qflx_lateral_s(97,:)
-     print *, 'qflx_lateral_s98', qflx_lateral_s(98,:)
-     print *, 'qflx_lateral_s99', qflx_lateral_s(99,:)
-     print *, 'qflx_lateral_s100', qflx_lateral_s(100,:)
+
 
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
@@ -1028,18 +970,10 @@ contains
                    s_y = watsat(c,j) &
                         * ( 1. -  (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
                    s_y=max(s_y,0.02_r8)
-                     !if(c==1) then
-                     !   print *, 'jwt',jwt(c)
-                     !   print *, 'h2osoi_liq1',h2osoi_liq(c,3)
-                     !endif
                    qlat_layer=min(qlat_tot,(s_y*(zwt(c) - zi(c,j-1))*1.e3))
                    qlat_layer=max(qlat_layer,0._r8)
 
                     h2osoi_liq(c,j) = h2osoi_liq(c,j) + qlat_layer
-                    if(c==1) then
-                        print *, 'h2osoi_liq1',h2osoi_liq(c,3)
-                    endif
-
                    if(s_y > 0._r8) zwt(c) = zwt(c) - qlat_layer/s_y/1000._r8
 
                    qlat_tot = qlat_tot - qlat_layer
@@ -1056,13 +990,6 @@ contains
                    qlat_layer=min(qlat_layer,0._r8)
                    h2osoi_liq(c,j) = h2osoi_liq(c,j) + qlat_layer
                    qlat_tot = qlat_tot - qlat_layer
-                   if(c==10) then
-                     print *, 'jwt',jwt(c)
-                     print *, 'zwt',zwt(c)
-                    !print *, 'qlat_tot',qlat_tot
-                    !print *, 'qlat_layer',qlat_layer
-                     print *, 's_y',s_y
-                   endif
                    if (qlat_tot >= 0.) then
                       zwt(c) = zwt(c) - qlat_layer/s_y/1000._r8
                       exit
