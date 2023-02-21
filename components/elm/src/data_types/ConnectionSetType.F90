@@ -43,7 +43,7 @@ subroutine col_connect_init(this, bounds)
    !Real(r8)                         :: x(ny+1,nx+1),y(ny+1,nx+1),zh(ny+1,nx+1),dx(ny,nx-1),dy(ny-1,nx),dz(ny,nx),slopex(ny,nx-1),slopey(ny-1,nx)
    !Real(r8)                         :: x(2,11),y(2,11),zh(2,11),dx(1,9),dy(9,10),dz(1,10),slopex(1,9),slopey(9,10)
    !Real(r8)                         :: x(16,33),y(16,33),zh(16,33),dx(15,31),dy(14,32),dz(15,32),slopex(15,31),slopey(14,32),slopexx(15,32),slopeyy(15,32)
-   Real(r8)                         :: x(36,51),y(36,51),zh(36,51),dx(35,49),dy(34,50),dz(35,50),slopex(35,49),slopey(34,50),slopexx(35,50),slopeyy(35,50)
+   Real(r8)                         :: x(36,51),y(36,51),zh(35,50),dx(35,49),dy(34,50),dz(35,50),slopex(35,49),slopey(34,50),slopexx(35,50),slopeyy(35,50)
    !Real(r8)                         :: x(3,51),y(3,51),zh(3,51),dx(2,49),dy(1,50),dz(2,50),slopex(2,49),slopey(1,50),slopexx(2,50),slopeyy(2,50)
    begc = bounds%begc;  endc = bounds%endc
    begg = bounds%begg;  endg = bounds%endg
@@ -77,6 +77,8 @@ subroutine col_connect_init(this, bounds)
         y (jj , ii) = jj*1000-1000         
      end do
    end do
+   print *, 'x', x
+   print *, 'y', y   
 
    nn = 0
    do jj = 1,ny
@@ -85,12 +87,14 @@ subroutine col_connect_init(this, bounds)
             zh(jj,ii) = col_pp%topo_ele(nn)
      end do
    end do
-   zh(ny+1,:)=zh(ny,:);
-   zh(:,nx+1)=zh(:,nx);
-
+   !zh(ny+1,:)=zh(ny,:);
+   !zh(:,nx+1)=zh(:,nx);
+   print *, 'zh', zh
    do ii = 1, ny           
      do jj = 1,nx-1
-      slopex(ii,jj) = (zh(ii,jj+2)+zh(ii+1,jj+2)-zh(ii,jj)-zh(ii+1,jj))/(x(ii,jj+2)+x(ii+1,jj+2)-x(ii,jj)-x(ii+1,jj))
+      !slopex(ii,jj) = (zh(ii,jj+2)+zh(ii+1,jj+2)-zh(ii,jj)-zh(ii+1,jj))/(x(ii,jj+2)+x(ii+1,jj+2)-x(ii,jj)-x(ii+1,jj))
+      !dx(ii,jj) = abs((x(ii,jj+2)+x(ii+1,jj+2)-x(ii,jj)-x(ii+1,jj))/4)
+      slopex(ii,jj) = (zh(ii,jj+1)+zh(ii+1,jj+1)-zh(ii,jj)-zh(ii+1,jj))/(x(ii,jj+1)+x(ii+1,jj+1)-x(ii,jj)-x(ii+1,jj))
       dx(ii,jj) = abs((x(ii,jj+2)+x(ii+1,jj+2)-x(ii,jj)-x(ii+1,jj))/4)
      end do
    end do
@@ -98,8 +102,11 @@ subroutine col_connect_init(this, bounds)
    if(ny > 1) then
    do ii = 1, ny-1
      do jj = 1,nx
-     slopey(ii,jj) = (zh(ii+2,jj)+zh(ii+2,jj+1)-zh(ii,jj)-zh(ii,jj+1))/(y(ii+2,jj)+y(ii+2,jj+1)-y(ii,jj)-y(ii,jj+1))
+     !slopey(ii,jj) = (zh(ii+2,jj)+zh(ii+2,jj+1)-zh(ii,jj)-zh(ii,jj+1))/(y(ii+2,jj)+y(ii+2,jj+1)-y(ii,jj)-y(ii,jj+1))
+     !dy(ii,jj) = abs((y(ii+2,jj)+y(ii+2,jj+1)-y(ii,jj)-y(ii,jj+1))/4)
+     slopey(ii,jj) = (zh(ii+1,jj)+zh(ii+1,jj+1)-zh(ii,jj)-zh(ii,jj+1))/(y(ii+1,jj)+y(ii+1,jj+1)-y(ii,jj)-y(ii,jj+1))
      dy(ii,jj) = abs((y(ii+2,jj)+y(ii+2,jj+1)-y(ii,jj)-y(ii,jj+1))/4)
+
      end do
    end do
   endif
@@ -117,7 +124,7 @@ subroutine col_connect_init(this, bounds)
        ! assume grid is counted along nx, cross-sectional area is dy*dz, top and bottom area is , dy-bar*dx
        iconn = iconn+1
        this%grid_id_up(iconn) = (ii-1)*nx+jj       !  Step-2: Eventually will need to read from surface dataset
-       this%grid_id_dn(iconn) = (ii-1)*nx+jj+1  !  There is already some code that we will be able to
+       this%grid_id_dn(iconn) = (ii-1)*nx+jj+1     !  There is already some code that we will be able to
        this%area(iconn)       = abs((y(ii+1,jj+1)-y(ii,jj+1)))      ! cross-sectional length, multiply by dz is area
        this%uparea(iconn)     = abs((y(ii+1,jj)-y(ii,jj)+y(ii+1,jj+1)-y(ii,jj+1))*dx(ii,jj))/2.0_r8      ! up cell grid area
        this%downarea(iconn)   = abs((y(ii+1,jj+1)-y(ii,jj+1)+y(ii+1,jj+2)-y(ii,jj+2))*dx(ii,jj))/2.0_r8       ! down cell grid area
@@ -182,7 +189,9 @@ subroutine col_connect_init(this, bounds)
       !this%aniso(iconn) ! will calculate based on clay sand ratio 
     enddo
 endif
-
+print *, 'vertcos',this%vertcos
+print *, 'dzg',this%dzg
+print *,'ele2',col_pp%topo_ele
 end subroutine col_connect_init
 
 function get_natveg_column_id(id, bounds) result(id_out)
