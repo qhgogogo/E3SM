@@ -623,7 +623,7 @@ contains
 
 	   !hydraulic conductivity hkl(iconn,j) is
            !the lateral hydraulic conductivity is calculated using the geometric mean of the 
-           !neighbouring lateral cells and is approximated as 20 times of the vertical hydraulic conductivity
+           !neighbouring lateral cells
              s1 = 0.5_r8*(h2osoi_vol(col_id_up,j) + h2osoi_vol(col_id_dn,j)) / &
                     (0.5_r8*(watsat(col_id_up,j)+watsat(col_id_dn,j)))
              s1 = min(1._r8, s1)
@@ -932,26 +932,19 @@ contains
          col_id_dn = get_natveg_column_id(grid_id_dn,bounds)
          den = conn%dist(iconn)*1000._r8
          j = nlevgrnd+1   !lateral flow in saturated zone
-         !hkl(iconn,j) =  sqrt(hksat(col_id_up,j)*hksat(col_id_dn,j))*1000._r8   ! should be multiple layers to the bottom of bedrock
          depth_up = zi(col_id_up,nlevgrnd) - zwt(col_id_up)  ! groundwater head(m) 
          depth_down = zi(col_id_dn,nlevgrnd) - zwt(col_id_dn) 
-        !depth_up = 15._r8 - zwt(col_id_up)  ! groundwater head(m) bedrock 15m deep
-        !depth_down = 15._r8 - zwt(col_id_dn) 
-        depth_up = max(depth_up, 0._r8)
-        depth_down= max(depth_down, 0._r8)
-        ! calculate transmissivity 
-        depth_m = (depth_up+depth_down)/2._r8 ! average depth between up down strem
-        zwt_m = (zwt(col_id_up)+zwt(col_id_dn))/2._r8
-        ko = sqrt(hksat(col_id_up,8)*hksat(col_id_dn,8))*1000._r8   ! 1.5 m locates in the 8th layer
-        anis  = 15.0_r8   ! will adapt this based on the clay sand ratio
-        !trans = anis*sqrt(hksat(col_id_up,15)*hksat(col_id_dn,15))*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s) 
-        call calcu_transmissivity(depth_m, zwt_m, ko, conn%slope(iconn), hksat(col_id_up,j), hksat(col_id_up,j),anis,trans)
-        !print *, 'trans2',trans
-        qflx_up_to_dn = -trans*(depth_down-depth_up+conn%dzg(iconn))*1000._r8/den  ! (mm2/s) 
-        qflx_lateral_s(col_id_up,j) = qflx_lateral_s(col_id_up,j) - qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%uparea(iconn)*conn%facecos(iconn)* conn%vertcos(col_id_up)  ! (mm2/s), area is cross section length 
-        qflx_lateral_s(col_id_dn,j) = qflx_lateral_s(col_id_dn,j) + qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%downarea(iconn)*conn%facecos(iconn) * conn%vertcos(col_id_dn) 
-        !qflx_lateral_s(col_id_up, j) = 0._r8;   ! do not recount the lateral flux if a cell is saturated and under water table !Qiu
-        !qflx_lateral_s(col_id_dn, j) = 0._r8;
+         depth_up = max(depth_up, 0._r8)
+         depth_down= max(depth_down, 0._r8)
+         ! calculate transmissivity 
+         depth_m = (depth_up+depth_down)/2._r8 ! average depth between up down strem
+         zwt_m = (zwt(col_id_up)+zwt(col_id_dn))/2._r8
+         ko = sqrt(hksat(col_id_up,8)*hksat(col_id_dn,8))*1000._r8   ! 1.5 m locates in the 8th layer
+         anis  = 15.0_r8   ! will adapt this based on the clay sand ratio
+         call calcu_transmissivity(depth_m, zwt_m, ko, conn%slope(iconn), hksat(col_id_up,j), hksat(col_id_up,j),anis,trans)
+         qflx_up_to_dn = -trans*(depth_down-depth_up+conn%dzg(iconn))*1000._r8/den  ! (mm2/s) 
+         qflx_lateral_s(col_id_up,j) = qflx_lateral_s(col_id_up,j) - qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%uparea(iconn)*conn%facecos(iconn)* conn%vertcos(col_id_up)  ! (mm2/s), area is cross section length 
+         qflx_lateral_s(col_id_dn,j) = qflx_lateral_s(col_id_dn,j) + qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%downarea(iconn)*conn%facecos(iconn) * conn%vertcos(col_id_dn) 
        enddo 
         
        do fc = 1, num_hydrologyc
