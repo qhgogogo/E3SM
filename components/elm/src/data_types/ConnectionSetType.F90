@@ -42,10 +42,6 @@ subroutine col_connect_init(this, bounds)
    Real(r8)                         :: x(11,11),y(11,11),zh(11,11),dx(10,9),dy(9,10),dz(10,10),slopex(10,9),slopey(9,10),slopexx(10,10),slopeyy(10,10)
    begc = bounds%begc;  endc = bounds%endc
    begg = bounds%begg;  endg = bounds%endg
-   !print *, 'begg', begg
-   !print *, 'endg', endg
-   !print *,  'begc',begc
-   !print *, 'endc',endc
    nx = 10
    ny = 10
    iconn=0
@@ -71,15 +67,14 @@ subroutine col_connect_init(this, bounds)
         !y (jj , ii) = jj*10-10 !steady slope
      end do
    end do
-   print *, 'y', y
-   print *, 'x', x
+
    do ii = 1, nx+1
      do jj = 1,ny+1
       !zh(ii,jj) = 10*SIN(x(ii,jj)*DACOS(-1.D0)/100._r8-DACOS(-1.D0)/2.0_r8)+20._r8+y(ii,jj)/50._r8  !has y slope 
       zh(ii,jj) = 10*SIN(x(ii,jj)*DACOS(-1.D0)/100._r8-DACOS(-1.D0)/2.0_r8)+20._r8  !no y slope
      end do
    end do
-   print *, 'zh', zh
+
    do ii = 1, ny           
      do jj = 1,nx-1
       slopex(ii,jj) = (zh(ii,jj+2)+zh(ii+1,jj+2)-zh(ii,jj)-zh(ii+1,jj))/(x(ii,jj+2)+x(ii+1,jj+2)-x(ii,jj)-x(ii+1,jj))
@@ -95,12 +90,8 @@ subroutine col_connect_init(this, bounds)
      end do
    end do
   endif
-   print *, 'slopex', slopex
-   !print *, 'slopey', slopey
-   slopey=0._r8
-   print *, 'dx', dx
-   !print *, 'dy', dy
 
+   slopey=0._r8
 ! grid rank e.g. nx*ny = 5*4
 ! 1 2 3 4 5
 ! 6 7 8 9 10
@@ -155,13 +146,7 @@ subroutine col_connect_init(this, bounds)
        enddo
       enddo
     endif
-print *, 'area', this%area
-print *, 'uparea', this%uparea
-print *, 'downarea', this%downarea
-print *, 'facecos', this%facecos
- !this%dzg(91:180) = 0._r8          
-print *, 'dist', this%dist
-print *, 'dzg', this%dzg 
+
   iconn = 0
  if (ny > 1) then
   do ii = 1, ny
@@ -179,7 +164,7 @@ print *, 'dzg', this%dzg
       this%vertcos(iconn) = 1._r8/sqrt(1 + slopexx(1,jj)**2)
     enddo
 endif
-print *, 'vertcos',this%vertcos
+
 end subroutine col_connect_init
 
 function get_natveg_column_id(id, bounds) result(id_out)
