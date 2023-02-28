@@ -544,7 +544,7 @@ contains
             else
                imped(c,j)=10._r8**(-e_ice*(0.5_r8*(icefrac(c,j)+icefrac(c,min(nlevsoi, j+1)))))
             endif
-            imped(c,j) = 1.0_r8  ! Han Qiu
+            imped(c,j) = 1.0_r8 
             hk(c,j) = imped(c,j)*s1*s2  
             dhkdw(c,j) = imped(c,j)*(2._r8*bsw(c,j)+3._r8)*s2* &
                  (1._r8/(watsat(c,j)+watsat(c,min(nlevsoi, j+1))))
@@ -759,10 +759,6 @@ contains
                dqodw1(c,j) = 0._r8
                dqodw2(c,j) = 0._r8
             else
-                !qout(c,j)   = -hk(c,j)*num/den
-                !dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
-                !dqodw2(c,j) = -( hk(c,j)*dsmpdw1 + num*dhkdw(c,j))/den
-               !Han Qiu test
                qout(c,j) = 0._r8
                dqodw1(c,j) = 0._r8
                dqodw2(c,j) = 0._r8
@@ -787,10 +783,6 @@ contains
                bmx(c,j+1) = dzmm(c,j+1)/dtime
                cmx(c,j+1) = 0._r8
             else
-               !rmx(c,j+1) = 0._r8
-               !amx(c,j+1) = 0._r8
-               !bmx(c,j+1) = dzmm(c,j+1)/dtime
-               !cmx(c,j+1) = 0._r8
                 rmx(c,j+1) =  qin(c,j+1) - qout(c,j+1)
                 amx(c,j+1) = -dqidw0(c,j+1)
                 bmx(c,j+1) =  dzmm(c,j+1)/dtime - dqidw1(c,j+1) + dqodw1(c,j+1)
@@ -931,15 +923,13 @@ contains
          j = nlevgrnd+1   !lateral flow in saturated zone
          depth_up = zi(col_id_up,nlevgrnd) - zwt(col_id_up)  ! groundwater head(m) 
          depth_down = zi(col_id_dn,nlevgrnd) - zwt(col_id_dn) 
-        depth_up = max(depth_up, 0._r8)
-        depth_down= max(depth_down, 0._r8)
+         depth_up = max(depth_up, 0._r8)
+         depth_down= max(depth_down, 0._r8)
         ! calculate transmissivity 
-        trans = 1.0_r8*sqrt(hksat(col_id_up,15)*hksat(col_id_dn,15))*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s) 
-        qflx_up_to_dn = -trans*(depth_down-depth_up+conn%dzg(iconn))*1000._r8/den
-       qflx_lateral_s(col_id_up,j) = qflx_lateral_s(col_id_up,j) - qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%uparea(iconn)*conn%facecos(iconn)* conn%vertcos(col_id_up)  !dy = area/dz dz= 1.0m=1000mm
-       qflx_lateral_s(col_id_dn,j) = qflx_lateral_s(col_id_dn,j) + qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%downarea(iconn)*conn%facecos(iconn) * conn%vertcos(col_id_dn) 
-       !qflx_lateral_s(col_id_up, j) = 0._r8;   ! do not recount the lateral flux if a cell is saturated and under water table
-       !qflx_lateral_s(col_id_dn, j) = 0._r8;
+         trans = 1.0_r8*sqrt(hksat(col_id_up,15)*hksat(col_id_dn,15))*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s) 
+         qflx_up_to_dn = -trans*(depth_down-depth_up+conn%dzg(iconn))*1000._r8/den
+         qflx_lateral_s(col_id_up,j) = qflx_lateral_s(col_id_up,j) - qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%uparea(iconn)*conn%facecos(iconn)* conn%vertcos(col_id_up)  !dy = area/dz dz= 1.0m=1000mm
+         qflx_lateral_s(col_id_dn,j) = qflx_lateral_s(col_id_dn,j) + qflx_up_to_dn/1000._r8*conn%area(iconn)/conn%downarea(iconn)*conn%facecos(iconn) * conn%vertcos(col_id_dn) 
        enddo        
 
 
