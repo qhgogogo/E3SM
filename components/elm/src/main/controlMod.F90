@@ -294,6 +294,8 @@ contains
     namelist /elm_inparm/ &
        lateral_connectivity, domain_decomp_type
 
+    namelist /elm_inparm/ use_subsurface_lateral_flow
+       
     namelist /elm_inparm/ &
          use_petsc_thermal_model
 

@@ -1976,6 +1976,7 @@ this mask will have smb calculated over the entire global land surface
 <!-- Defaults for lateral grid connectivity     -->
 <!-- =========================================  -->
 <lateral_connectivity>.false.</lateral_connectivity>
+<use_subsurface_lateral_flow  lateral_connectivity=".true.">.false.</use_subsurface_lateral_flow>
 <domain_decomposition_method>round_robin</domain_decomposition_method>
 
 <!-- =========================================  -->

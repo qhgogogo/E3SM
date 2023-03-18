@@ -1747,12 +1747,21 @@ and pct_nat_pft read from the surface dataset.
 </entry>
 
 <!-- =========================================================================================  -->
+<!-- Namelist options related to subsurface lateral flow
+<!-- ========================================================================================  -->
+<entry id="use_subsurface_lateral_flow" type="logical" category="elm_initialization"
+       group="elm_inparm" valid_values="" >
+If TRUE enable subsurface lateral flow in ELM.
+</entry>
+
+<!-- =========================================================================================  -->
 <!-- Namelist options related to lateral grid connectivity
 <!-- ========================================================================================  -->
 <entry id="lateral_connectivity" type="logical" category="elm_initialization"
        group="elm_inparm" valid_values="" >
-If TRUE setup up lateral grid connectivity in CLM.
+If TRUE setup up lateral grid connectivity in ELM.
 </entry>
+
 
 <entry id="domain_decomp_type" type="char*256" category="elm_initialization"
        group="elm_inparm" valid_values="round_robin,graph_partitioning" >
