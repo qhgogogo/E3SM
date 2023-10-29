@@ -570,8 +570,9 @@ contains
          endif
 
          ! set decay factor
-         this%hkdepth_col(c) = 1._r8/2.5_r8
-
+         this%hkdepth_col(c) = 1._r8/0.2_r8
+                 !this%hkdepth_col(c) = 1._r8/fdrain(c)   !Qiu
+         
       end do
     end associate
 

@@ -400,7 +400,7 @@ contains
                hkl = impedl*s1*s2*10.0_r8
 
                qflx_up_to_dn = -hkl*(smp_dn - smp_up + dzgmm)/den
-
+                           
                if (up_local) then
                   ! save lateral flux in a temporary variable
                   forder = conn%grid_up_forder(iconn)
@@ -414,6 +414,7 @@ contains
                   lateral_unsat_fluxes(col_id_dn,j,forder) = &
                        + qflx_up_to_dn*conn%face_length(iconn)/conn%downarea(iconn)*conn%facecos(iconn)
                end if
+               !lateral_unsat_fluxes = 0._r8 !Han Qiu
 
             endif
          enddo
@@ -471,7 +472,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: fc,c,j,iconn
-    integer :: grid_id_up, grid_id_dn, col_id_up, col_id_dn
+    integer :: grid_id_up, grid_id_dn, col_id_up, col_id_dn,grid_id_up_g,grid_id_dn_g
     integer :: step, nlevbed
     integer :: nstep
     logical :: up_local, dn_local
@@ -520,9 +521,8 @@ contains
       do step = 1,nstep
          qflx_lateral_s=0._r8
          lateral_sat_fluxes(:,:) = 0._r8
-
          do iconn = 1, conn%nconn
-
+            
             grid_id_up = conn%grid_id_up(iconn); !g1
             grid_id_dn = conn%grid_id_dn(iconn); !g2
 
@@ -553,10 +553,25 @@ contains
 
             depth_up = max(depth_up, 0._r8)
             depth_down= max(depth_down, 0._r8)
-
+            ! print *, zi(col_id_up,nlevgrnd),zwt(col_id_up),grid_id_up,grid_id_dn,up_local,dn_local,col_id_up,col_id_dn 
+            ! print *, 'up' ,conn%dzg(iconn),depth_up,depth_down,den,grid_id_up
             ! calculate transmissivity
             trans = 1.0_r8*sqrt(hksat_up*hksat_dn)*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s)
             qflx_up_to_dn = -trans*(depth_down-depth_up+conn%dzg(iconn))*1000._r8/den
+            !if (up_local) then
+            !  grid_id_up_g = bounds%begg + grid_id_up - 1
+            !endif
+
+            !if (dn_local) then
+            !  grid_id_dn_g = bounds%begg + grid_id_dn - 1
+            !endif
+
+            !if (abs(grid_id_up_g-213244)<0.01) then
+            !print *, 'up_local' ,conn%dzg(iconn),depth_up,depth_down,den,trans
+            !endif
+            !if (abs(grid_id_dn_g-213244)<0.01) then
+            !print *, 'dn_local' ,conn%dzg(iconn),depth_up,depth_down,den,trans
+            !endif
 
             if (up_local) then
                ! save lateral flux in a temporary variable
@@ -572,7 +587,7 @@ contains
                     qflx_up_to_dn/1000._r8*conn%face_length(iconn)/conn%downarea(iconn)*conn%facecos(iconn) * conn%vertcos(col_id_dn-bounds%begc+1)
             end if
          enddo
-
+         !lateral_sat_fluxes(:,:) = 0._r8        !Han Qiu
          ! Now accumulate lateral saturated fluxes
          do fc = 1, num_hydrologyc
             c = filter_hydrologyc(fc)
