@@ -167,7 +167,7 @@ contains
             i_0(c)         = max_infil(c) * (1._r8 - (1._r8 - A(c))**(1._r8/b_infil(c)))
             fsat(c)        = A(c)  !for output
          else
-            fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))
+            fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))   
          end if
 
          ! use perched water table to determine fsat (if present)
@@ -204,6 +204,8 @@ contains
          else
             ! only send fast runoff directly to streams
             qflx_surf(c) =   fsat(c) * qflx_top_soil(c)
+            if (qflx_top_soil(c)>0) then
+            endif
          endif
       end do
 
@@ -446,13 +448,14 @@ contains
                    frac_infclust=(frac_h2osfc(c)-pc)**mu
                 endif
              endif
-
+             !print *,'frac_h2osfc',frac_h2osfc(c), h2osfc(c),h2osfc_thresh(c)
+             ! print *, h2osfc(c),h2osfc_thresh(c)
              ! limit runoff to value of storage above S(pc)
              if(h2osfc(c) >= h2osfc_thresh(c) .and. h2osfcflag/=0) then
                 ! spatially variable k_wet
                 k_wet=1.0_r8 * sin((rpi/180.) * col_pp%topo_slope(c))
                 qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
-
+                !print *,'wet',col_pp%topo_slope(c), k_wet,frac_infclust
                 qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
              else
                 qflx_h2osfc_surf(c)= 0._r8
@@ -977,7 +980,7 @@ contains
           qcharge            =>    soilhydrology_vars%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)
           origflag           =>    soilhydrology_vars%origflag           , & ! Input:  logical
           h2osfcflag         =>    soilhydrology_vars%h2osfcflag         , & ! Input:  logical
-
+          !xs1                =>    soilhydrology_vars%xs1                , & ! Input:  logical  !qiu
           qflx_snwcp_liq     =>    col_wf%qflx_snwcp_liq     , & ! Output: [real(r8) (:)   ] excess rainfall due to snow capping (mm H2O /s) [+]
           qflx_snwcp_ice     =>    col_wf%qflx_snwcp_ice     , & ! Output: [real(r8) (:)   ] excess snowfall due to snow capping (mm H2O /s) [+]
           !qflx_dew_grnd      =>    col_wf%qflx_dew_grnd      , & ! Output: [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]
@@ -1233,6 +1236,7 @@ contains
                    rsub_top_max = min(10._r8 * sin((rpi/180.) * col_pp%topo_slope(c)), rsub_top_globalmax)
                 end if
              endif
+             !print *, 'rsub_top_max', rsub_top_max 
              if (use_vichydro) then
                 ! ARNO model for the bottom soil layer (based on bottom soil layer
                 ! moisture from previous time step
@@ -1250,8 +1254,12 @@ contains
              else
 	        if (jwt(c) == nlevbed .and. zengdecker_2009_with_var_soil_thick) then
                    rsub_top(c)    = 0._r8
+                  ! print *, 'stop here rsub_top2', rsub_top 
+
                 else
                    rsub_top(c)    = imped * rsub_top_max* exp(-fff(c)*zwt(c))
+                 !print *, 'stop here rsub_top',rsub_top_max,col_pp%topo_slope(c),rsub_top(c),fff(c), zwt(c) 
+
 		end if
              end if
 
@@ -1261,10 +1269,9 @@ contains
              rous = watsat(c,nlevbed) &
                   * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nlevbed))**(-1./bsw(c,nlevbed)))
              rous=max(rous,0.02_r8)
-
              !--  water table is below the soil column  --------------------------------------
-             if(jwt(c) == nlevbed) then
-	        if (zengdecker_2009_with_var_soil_thick) then
+             if(jwt(c) == nlevbed) then 
+	        if (zengdecker_2009_with_var_soil_thick) then 
          	   if (-1._r8 * smp_l(c,nlevbed) < 0.5_r8 * dzmm(c,nlevbed)) then
            	      zwt(c) = z(c,nlevbed) - (smp_l(c,nlevbed) / 1000._r8)
 		   end if
@@ -1296,6 +1303,7 @@ contains
                 !-- water table within soil layers 1-9  -------------------------------------
                 !============================== RSUB_TOP =========================================
                 !--  Now remove water via rsub_top
+                !print *, 'stop here rsub_top5'
                 rsub_top_tot = - rsub_top(c) * dtime
                 !should never be positive... but include for completeness
                 if(rsub_top_tot > 0.) then !rising water table
@@ -1481,7 +1489,7 @@ contains
           ! Sub-surface runoff and drainage
 
           qflx_drain(c) = qflx_rsub_sat(c) + rsub_top(c)
-
+          ! print*, 'here5', qflx_rsub_sat(c), rsub_top(c)
           ! Set imbalance for snow capping
 
           qflx_qrgwl(c) = qflx_snwcp_liq(c)

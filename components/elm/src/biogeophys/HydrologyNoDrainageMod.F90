@@ -450,7 +450,7 @@ contains
             if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
                  .or. ctype(c) == icol_roof) .and. j > nlevurb) then
             else
-               h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) ! + h2osoi_ice(c,j)/(dz(c,j)*denice)  ! Han qiu comment out
+               h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o)  + h2osoi_ice(c,j)/(dz(c,j)*denice)  ! Han qiu comment out
                h2osoi_liqvol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o)
                h2osoi_icevol(c,j) = h2osoi_ice(c,j)/(dz(c,j)*denice)
                air_vol(c,j)       = max(1.e-4_r8,watsat(c,j) - h2osoi_vol(c,j))

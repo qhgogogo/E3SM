@@ -135,10 +135,14 @@ contains
           zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
           !zsoi(j) = j*1.0_r8-0.5_r8 !Han Qiu test
        enddo
-       zsoi(12) = zsoi(12)+20._r8
-       zsoi(13) = zsoi(13)+50._r8
-       zsoi(14) = zsoi(14)+75._r8
-       zsoi(15) = zsoi(15)+150._r8
+       do j = 11, 100
+       zsoi(j) = zsoi(10)+(j-10)*2._r8
+       !zsoi(j) = zsoi(10)+(j-10)*1._r8
+       enddo
+       !zsoi(12) = zsoi(12)+20._r8
+       !zsoi(13) = zsoi(13)+50._r8
+       !zsoi(14) = zsoi(14)+75._r8
+       !zsoi(15) = zsoi(15)+150._r8
 
     end if
 

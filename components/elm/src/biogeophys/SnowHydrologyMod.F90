@@ -461,6 +461,7 @@ contains
 
          qflx_top_soil(c) = (qout(c) / dtime) &
               + (1.0_r8 - frac_sno_eff(c)) * qflx_rain_grnd(c)
+         !print *, 'snow',qout(c),frac_sno_eff(c),qflx_rain_grnd(c),qflx_top_soil(c) 
          int_snow(c) = int_snow(c) + frac_sno_eff(c) &
                        * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_rain_grnd(c)) * dtime
       end do

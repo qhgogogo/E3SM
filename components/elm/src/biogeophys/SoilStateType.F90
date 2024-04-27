@@ -725,14 +725,14 @@ contains
                 call pedotransf(ipedof, sand, clay, &
                      this%watsat_col(c,lev), this%bsw_col(c,lev), this%sucsat_col(c,lev), xksat)
 
-                !om_watsat         = max(0.93_r8 - 0.1_r8   *(zsoi(lev)/zsapric), 0.83_r8)
-                !om_b              = min(2.7_r8  + 9.3_r8   *(zsoi(lev)/zsapric), 12.0_r8)
-                !om_sucsat         = min(10.3_r8 - 0.2_r8   *(zsoi(lev)/zsapric), 10.1_r8)
-                !om_hksat          = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), 0.0001_r8)
-                om_watsat         = max(0.93_r8 - 0.1_r8   *(5.0_r8/zsapric), 0.83_r8)
-                om_b              = min(2.7_r8  + 9.3_r8   *(5.0_r8/zsapric), 12.0_r8)
-                om_sucsat         = min(10.3_r8 - 0.2_r8   *(5.0_r8/zsapric), 10.1_r8)
-                om_hksat          = max(0.28_r8 - 0.2799_r8*(5.0_r8/zsapric), 0.0001_r8)
+                om_watsat         = max(0.93_r8 - 0.1_r8   *(zsoi(lev)/zsapric), 0.83_r8)
+                om_b              = min(2.7_r8  + 9.3_r8   *(zsoi(lev)/zsapric), 12.0_r8)
+                om_sucsat         = min(10.3_r8 - 0.2_r8   *(zsoi(lev)/zsapric), 10.1_r8)
+                om_hksat          = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), 0.0001_r8)
+                !om_watsat         = max(0.93_r8 - 0.1_r8   *(5.0_r8/zsapric), 0.83_r8)   !qiu added
+                !om_b              = min(2.7_r8  + 9.3_r8   *(5.0_r8/zsapric), 12.0_r8)
+                !om_sucsat         = min(10.3_r8 - 0.2_r8   *(5.0_r8/zsapric), 10.1_r8)
+                !om_hksat          = max(0.28_r8 - 0.2799_r8*(5.0_r8/zsapric), 0.0001_r8)
 
                 this%bd_col(c,lev)        = (1._r8 - this%watsat_col(c,lev))*2.7e3_r8
                 this%watsat_col(c,lev)    = (1._r8 - om_frac) * this%watsat_col(c,lev) + om_watsat*om_frac

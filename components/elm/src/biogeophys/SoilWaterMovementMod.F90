@@ -1,7 +1,7 @@
 module SoilWaterMovementMod
 
   !-----------------------------------------------------------------------
-  ! DESCRIPTIONa
+  ! DESCRIPTION
   ! module contains different subroutines to couple soil and root water interactions
   !
   ! created by Jinyun Tang, Mar 12, 2014
@@ -558,7 +558,7 @@ contains
             else
                imped(c,j)=10._r8**(-e_ice*(0.5_r8*(icefrac(c,j)+icefrac(c,min(nlevsoi, j+1)))))
             endif
-            imped(c,j) = 1.0_r8  ! Han Qiu
+            !imped(c,j) = 1.0_r8  ! Han Qiu
             hk(c,j) = imped(c,j)*s1*s2  
             dhkdw(c,j) = imped(c,j)*(2._r8*bsw(c,j)+3._r8)*s2* &
                  (1._r8/(watsat(c,j)+watsat(c,min(nlevsoi, j+1))))
@@ -630,7 +630,8 @@ contains
          qout(c,j)   = -hk(c,j)*num/den
          dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
          dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-         rmx(c,j) =  - qout(c,j)*conn%vertcos(c-bounds%begc+1) + qflx_lateral_s(c,j)
+         rmx(c,j) =  qin(c,j)*conn%vertcos(c-bounds%begc+1)- qout(c,j)*conn%vertcos(c-bounds%begc+1) + qflx_lateral_s(c,j)- qflx_rootsoi_col(c,j)*conn%vertcos(c-bounds%begc+1)
+         rmx(c,j) =  qin(c,j)- qout(c,j) + qflx_lateral_s(c,j)- qflx_rootsoi_col(c,j)
          amx(c,j) =  0._r8
          bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1(c,j)
          cmx(c,j) =  dqodw2(c,j)
@@ -644,7 +645,6 @@ contains
          do j = 2, nlevbed - 1
             den    = (zmm(c,j) - zmm(c,j-1))
             dzq    = (zq(c,j)-zq(c,j-1))
-            !dzq = 1000._r8
             num    = (smp(c,j)-smp(c,j-1)) - dzq
             qin(c,j)    = -hk(c,j-1)*num/den
             dqidw0(c,j) = -(-hk(c,j-1)*dsmpdw(c,j-1) + num*dhkdw(c,j-1))/den
@@ -656,7 +656,8 @@ contains
             qout(c,j)   = -hk(c,j)*num/den
             dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
             dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-            rmx(c,j)    =  qin(c,j)*conn%vertcos(c-bounds%begc+1) - qout(c,j)*conn%vertcos(c-bounds%begc+1) + qflx_lateral_s(c,j)
+            rmx(c,j)    =  qin(c,j)*conn%vertcos(c-bounds%begc+1) - qout(c,j)*conn%vertcos(c-bounds%begc+1) + qflx_lateral_s(c,j)-  qflx_rootsoi_col(c,j)*conn%vertcos(c-bounds%begc+1)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) + qflx_lateral_s(c,j)-  qflx_rootsoi_col(c,j)
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  dqodw2(c,j)
@@ -680,7 +681,9 @@ contains
             qout(c,j)   =  0._r8
             dqodw1(c,j) =  0._r8
 
-            rmx(c,j)    =  qin(c,j)*conn%vertcos(c-bounds%begc+1) - qout(c,j)*conn%vertcos(c-bounds%begc+1) + qflx_lateral_s(c,j)
+            rmx(c,j)    =  qin(c,j)*conn%vertcos(c-bounds%begc+1) - qout(c,j)*conn%vertcos(c-bounds%begc+1) + qflx_lateral_s(c,j)- qflx_rootsoi_col(c,j)*conn%vertcos(c-bounds%begc+1)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) + qflx_lateral_s(c,j)- qflx_rootsoi_col(c,j)
+            !rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)  !original code
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  0._r8
@@ -692,7 +695,7 @@ contains
             cmx(c,j+1) = 0._r8
 
          else ! water table is below soil column
-
+            print *, 'will water table below soil column'
             ! compute aquifer soil moisture as average of layer 10 and saturation
             if(origflag == 1) then
                s_node = max(0.5*(1.0_r8+h2osoi_vol(c,j)/watsat(c,j)), 0.01_r8)
@@ -734,6 +737,7 @@ contains
             end if
 
             rmx(c,j) =  qin(c,j)*conn%vertcos(c-bounds%begc+1) - qout(c,j)*conn%vertcos(c-bounds%begc+1) + qflx_lateral_s(c,j)
+            rmx(c,j) =  qin(c,j) - qout(c,j)+ qflx_lateral_s(c,j)
             amx(c,j) = -dqidw0(c,j)
             bmx(c,j) =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j) =  dqodw2(c,j)

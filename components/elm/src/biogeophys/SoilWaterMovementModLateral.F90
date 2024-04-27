@@ -343,7 +343,7 @@ contains
          den = conn%dist(iconn)*1000._r8
 
          do j = 1, nlevgrnd
-
+            !print *, 'nlevgrnd'
             !it's the same for all the neighboring up-down layers
             dzgmm = conn%dzg(iconn)*1000._r8
 
@@ -424,7 +424,7 @@ contains
       do c = bounds%begc, bounds%endc
          do j = 1, nlevgrnd
             do iedge = 1, ugrid%maxEdges
-               qflx_lateral_s(c,j) = qflx_lateral_s(c,j) + lateral_unsat_fluxes(c,j,iedge)
+               qflx_lateral_s(c,j) = qflx_lateral_s(c,j) + lateral_unsat_fluxes(c,j,iedge)   !qiu comment to close lat
             end do
          end do
       end do
@@ -476,16 +476,15 @@ contains
     integer :: step, nlevbed
     integer :: nstep
     logical :: up_local, dn_local
-    real(r8) :: hksat_up, hksat_dn
+    real(r8) :: hksat_up, hksat_dn, hksat_up_ref, hksat_dn_ref
     real(r8) :: den, qflx_up_to_dn
-    real(r8) :: depth_up, depth_down
+    real(r8) :: depth_up, depth_down, depth_m, zwt_m
     real(r8) :: dtime, qlat_layer, qlat_tot, qlat_temp, s_y
-    real(r8) :: rous, sy, trans
+    real(r8) :: rous, sy, trans, anis, ko, slope
     real(r8) :: qflx_lateral_s(bounds%begc:bounds%endc)
     type(ugrid_type) , pointer :: ugrid
     real(r8), pointer :: lateral_sat_fluxes(:,:)
     integer :: iedge, forder
-
     !-----------------------------------------------------------------------
 
     associate(                                                &
@@ -507,13 +506,14 @@ contains
          ghost_zi       => ghost_col_pp%zi                  , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
          ghost_hksat    => ghost_soilstate_vars%hksat_col   , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
          ghost_zwt      => ghost_soilhydrology_vars%zwt_col , & ! Input: [real(r8) (:)   ]  water table depth (m)
-         ghost_nlev2bed => ghost_col_pp%nlevbed               & ! Input:  [integer  (:)   ]  number of layers to bedrock
+         ghost_nlev2bed => ghost_col_pp%nlevbed,               & ! Input:  [integer  (:)   ]  number of layers to bedrock
+         anistro  => soilhydrology_vars%anistro &
          )
 
       ugrid => ldomain_lateral%ugrid
 
       allocate(lateral_sat_fluxes(bounds%begc:bounds%endc, ugrid%maxEdges))
-
+      
       ! Water table changes due to qlateral in saturated GW
       nstep=1
       dtime = get_step_size()
@@ -536,27 +536,41 @@ contains
                ! local grid cell
                depth_up = zi(col_id_up,nlevgrnd) - zwt(col_id_up)  ! groundwater head(m)
                hksat_up = hksat(col_id_up,15)
+               hksat_up_ref = hksat(col_id_up,8)
             else
                depth_up = ghost_zi(col_id_up,nlevgrnd) - ghost_zwt(col_id_up)  ! groundwater head(m)
                hksat_up = ghost_hksat(col_id_up,15)
+               hksat_up_ref = ghost_hksat(col_id_up,8)
             end if
 
             if (dn_local) then
                depth_down = zi(col_id_dn,nlevgrnd) - zwt(col_id_dn)
                hksat_dn = hksat(col_id_dn,15)
+               hksat_dn_ref = hksat(col_id_dn,8)
             else
                depth_down = ghost_zi(col_id_dn,nlevgrnd) - ghost_zwt(col_id_dn)
                hksat_dn = ghost_hksat(col_id_dn,15)
+               hksat_dn_ref = ghost_hksat(col_id_dn,8)
             end if
 
             den = conn%dist(iconn)*1000._r8
 
             depth_up = max(depth_up, 0._r8)
-            depth_down= max(depth_down, 0._r8)
+            depth_down = max(depth_down, 0._r8)
+            depth_m = (depth_up + depth_down)/2
+            zwt_m = (zwt(col_id_up)+zwt(col_id_dn))/2._r8
+            anis = sqrt(anistro(col_id_dn)*anistro(col_id_up))
+            anis = min(anis, 50._r8)
+            anis = max(anis, 1._r8)
+            ko = sqrt(hksat_up_ref*hksat_dn_ref)*1000._r8
             ! print *, zi(col_id_up,nlevgrnd),zwt(col_id_up),grid_id_up,grid_id_dn,up_local,dn_local,col_id_up,col_id_dn 
             ! print *, 'up' ,conn%dzg(iconn),depth_up,depth_down,den,grid_id_up
             ! calculate transmissivity
-            trans = 1.0_r8*sqrt(hksat_up*hksat_dn)*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s)
+            !trans = sqrt(hksat_up*hksat_dn*anistro(col_id_dn)*anistro(col_id_up))*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s)
+            slope = 0.015
+            call calcu_transmissivity(depth_m, zwt_m, ko, slope, hksat_up, hksat_dn,anis,trans)
+            !trans = 1.0_r8*sqrt(hksat_up*hksat_dn)*(depth_up+depth_down)/2._r8*1000._r8 ! (mm2/s)
+            !print *, 'trans', trans
             qflx_up_to_dn = -trans*(depth_down-depth_up+conn%dzg(iconn))*1000._r8/den
             !if (up_local) then
             !  grid_id_up_g = bounds%begg + grid_id_up - 1
@@ -592,7 +606,7 @@ contains
          do fc = 1, num_hydrologyc
             c = filter_hydrologyc(fc)
             do iedge = 1, ugrid%maxEdges
-               qflx_lateral_s(c) = qflx_lateral_s(c) + lateral_sat_fluxes(c, iedge)
+               qflx_lateral_s(c) = qflx_lateral_s(c) + lateral_sat_fluxes(c, iedge)  !qiu comment to close lat
             end do
          end do
 
@@ -634,7 +648,7 @@ contains
                      if (qlat_tot <= 0._r8) exit
                   enddo
                else ! deepening water table (negative qlat)
-                  do j = jwt(c)+1, 15
+                  do j = jwt(c)+1, nlevgrnd
                      !scs: use analytical expression for specific yield
                      s_y = watsat(c,j) &
                           * ( 1._r8 -  (1.+1.e3*zwt(c)/sucsat(c,j))**(-1._r8/bsw(c,j)))
@@ -681,6 +695,39 @@ contains
     end associate
 
   end subroutine SolveLateralSatFlow
+  
+  !-----------------------------------------------------------------------
+  subroutine calcu_transmissivity(depth_m,zwt_m, ko, slope, hksat1, hksat2, anis, trans) 
+   
+     ! !DESCRIPTION:
+     ! Calculate transmissivity based on Fan et al 2007 
+     ! 1.5 m is located in the 8th soil layer based on ELM soil layer depths
+     use shr_kind_mod         , only : r8 => shr_kind_r8
+     integer  :: i                                                   ! indices
+     real(r8), intent(out) :: trans  
+     real(r8) :: f                                                  !e-folding length and parameters a , b
+     real(r8) :: depth_m,zwt_m, hksat1, hksat2, ko            !ko is the saturated vertical hydraulic conductivity at 1.5 m (8th layer in elm)
+     real(r8) :: T1,T2 
+     real(r8) :: anis,slope, a ,b
+     a = 120._r8
+     b = 150._r8
+     if(ABS(slope)>0.16) then
+       f=5._r8
+      else
+       f= a/(1+b*ABS(slope))
+      endif
+
+     if (zwt_m < 1.5) then
+        
+         T1 = anis*ko*(1.5_r8 - zwt_m)  ! need to modify ko for each layer later
+         T2 = anis*ko*f
+         trans = T1 + T2
+     else
+      
+      trans = anis*ko*f*EXP(-(zwt_m - 1.5_r8)/f)
+     endif
+  
+  end subroutine calcu_transmissivity
 
   !-----------------------------------------------------------------------
   subroutine ThetaBasedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -752,7 +799,7 @@ contains
 
          ! locate water table from bottom up starting at bottom of soil column
          ! sat_lev is an arbitrary saturation level used to determine water table
-         sat_lev=0.96
+         sat_lev=0.90
 
          k_zwt=nlevgrnd
          sat_flag=1 !will remain unchanged if all layers at saturation
@@ -781,6 +828,10 @@ contains
             m=(z(c,k_zwt+1)-z(c,k_zwt))/(s2-s1)*1.0_r8
             b=z(c,k_zwt+1)-m*s2
             zwt(c)=max(0._r8,m*sat_lev+b)
+            !b = (s1-0.32)/0.62
+            !b=max(0._r8,b)
+            !b=min(1._r8,b)
+            !zwt(c)=max(0._r8,z(c,k_zwt+1)-(z(c,k_zwt+1)-z(c,k_zwt))*b)
 
          else
             zwt(c)=zi(c,nlevgrnd)

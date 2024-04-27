@@ -1619,7 +1619,7 @@ contains
                       !this%h2osoi_vol(c,j) = 0.70_r8*watsat_input(c,j) !0.15_r8 to avoid very dry conditions that cause errors in FATES HYDRO
                       this%h2osoi_vol(c,j) = 0.69_r8*watsat_input(c,j)   !Han Qiu for test
                    else
-                      !this%h2osoi_vol(c,j) = 0.15_r8
+                       !this%h2osoi_vol(c,j) = 0.15_r8
                        !this%h2osoi_vol(c,j) = 0.69_r8*watsat_input(c,j)
                        this%h2osoi_vol(c,1) = 0.5539*watsat_input(c,j)
                        this%h2osoi_vol(c,2) = 0.5675*watsat_input(c,j)
@@ -1627,8 +1627,9 @@ contains
                        this%h2osoi_vol(c,4) = 0.6048*watsat_input(c,j)
                        this%h2osoi_vol(c,5) = 0.6327*watsat_input(c,j)
                        this%h2osoi_vol(c,6) = 0.6743*watsat_input(c,j)
-                       this%h2osoi_vol(c,7) = 0.7519*watsat_input(c,j)
-                       this%h2osoi_vol(c,8:15) = 1.0*watsat_input(c,j)
+                       this%h2osoi_vol(c,7:13) = 0.7519*watsat_input(c,j)
+                       !this%h2osoi_vol(c,14:60) = 1.0*watsat_input(c,j)
+                       this%h2osoi_vol(c,14:100) = 1.0*watsat_input(c,j)
                        !this%h2osoi_vol(c,9) = 1.0*watsat_input(c,j)
                        !this%h2osoi_vol(c,10) = 1.0*watsat_input(c,j)
                    endif

@@ -40,6 +40,7 @@ Module SoilHydrologyType
      real(r8), pointer :: end_wa_grc        (:)    => null() ! grid-level water in the unconfined aquifer at end of the time step (mm)
      real(r8), pointer :: qflx_bot_col      (:)    => null()
      real(r8), pointer :: qcharge_col       (:)    => null() ! col aquifer recharge rate (mm/s)
+     !real(r8), pointer :: xs1       (:)    => null() !
      real(r8), pointer :: fracice_col       (:,:)  => null() ! col fractional impermeability (-)
      real(r8), pointer :: icefrac_col       (:,:)  => null() ! col fraction of ice
      real(r8), pointer :: fcov_col          (:)    => null() ! col fractional impermeable area
@@ -65,6 +66,7 @@ Module SoilHydrologyType
      real(r8), pointer :: max_infil_col     (:)     => null()! col VIC maximum infiltration rate calculated in VIC
      real(r8), pointer :: i_0_col           (:)     => null()! col VIC average saturation in top soil layers
      real(r8), pointer :: ice_col           (:,:)   => null()! col VIC soil ice (kg/m2) for VIC soil layers
+     real(r8), pointer :: anistro           (:)     => null()! groundwater anisotropic ratio
 
    contains
 
@@ -130,6 +132,7 @@ contains
     allocate(this%beg_wa_grc        (begg:endg))                 ; this%beg_wa_grc        (:)     = spval
     allocate(this%end_wa_grc        (begg:endg))                 ; this%end_wa_grc        (:)     = spval
     allocate(this%qcharge_col       (begc:endc))                 ; this%qcharge_col       (:)     = spval
+    !allocate(this%xs1               (begc:endc))                 ; this%xs1               (:)     = spval  !xs1 qiu
     allocate(this%fracice_col       (begc:endc,nlevgrnd))        ; this%fracice_col       (:,:)   = spval
     allocate(this%icefrac_col       (begc:endc,nlevgrnd))        ; this%icefrac_col       (:,:)   = spval
     allocate(this%fcov_col          (begc:endc))                 ; this%fcov_col          (:)     = spval
@@ -154,6 +157,7 @@ contains
     allocate(this%max_infil_col     (begc:endc))                 ; this%max_infil_col     (:)     = spval
     allocate(this%i_0_col           (begc:endc))                 ; this%i_0_col           (:)     = spval
     allocate(this%ice_col           (begc:endc,nlayert))         ; this%ice_col           (:,:)   = spval
+    allocate(this%anistro           (begc:endc))                 ; this%anistro           (:)     = spval
 
   end subroutine InitAllocate
 
@@ -189,6 +193,11 @@ contains
     call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
          avgflag='A', long_name='aquifer recharge rate (vegetated landunits only)', &
          ptr_col=this%qcharge_col, l2g_scale_type='veg')
+    
+    !this%xs1(begc:endc) = spval
+    !call hist_addfld1d (fname='XS1',  units='mm/s',  &
+    !     avgflag='A', long_name='extra water from 1st layer soil to runoff', &
+    !     ptr_col=this%xs1, l2g_scale_type='veg')
 
     this%fcov_col(begc:endc) = spval
     call hist_addfld1d (fname='FCOV',  units='unitless',  &
@@ -271,6 +280,7 @@ contains
     real(r8) ,pointer  :: zsoifl     (:)   ! original soil midpoint 
     real(r8) ,pointer  :: dzsoifl    (:)   ! original soil thickness 
     real(r8) ,pointer  :: fdrain     (:)   ! top-model drainage parameter
+    real(r8) ,pointer  :: anis       (:)   ! anisotropic ratio
     !-----------------------------------------------------------------------
 
     ! -----------------------------------------------------------------
@@ -324,7 +334,8 @@ contains
              else
                 this%wa_col(c)  = 4000._r8
                 !this%zwt_col(c) = (25._r8 + col_pp%zi(c,nlevsoi)) - this%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
-                this%zwt_col(c) = (12.1_r8 + col_pp%zi(c,nlevsoi)) - this%wa_col(c)/0.2_r8 /1000._r8  ! Qiu modify 7.1m below ground
+                !this%zwt_col(c) = (12.1_r8 + col_pp%zi(c,nlevsoi)) - this%wa_col(c)/0.2_r8 /1000._r8  ! Qiu modify 7.1m below ground
+                this%zwt_col(c) = 10.1_r8  ! Qiu modify 15.1m below ground
                 ! initialize frost_table, zwt_perched to bottom of soil column
                 this%zwt_perched_col(c) = col_pp%zi(c,nlevsoi)
                 this%frost_table_col(c) = col_pp%zi(c,nlevsoi)
@@ -544,6 +555,15 @@ contains
     end if
     call ncd_pio_closefile(ncid)
 
+    allocate(anis(bounds%begg:bounds%endg))
+    call getfil (fsurdat, locfn, 0)
+    call ncd_pio_openfile (ncid, locfn, 0)
+    call ncd_io(ncid=ncid, varname='anis', flag='read', data=anis, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       anis(:) = 5._r8
+    end if
+    call ncd_pio_closefile(ncid)
+   
     associate(micro_sigma => col_pp%micro_sigma)
       do c = bounds%begc, bounds%endc
 
@@ -570,14 +590,15 @@ contains
          endif
 
          ! set decay factor
-         this%hkdepth_col(c) = 1._r8/0.2_r8
-                 !this%hkdepth_col(c) = 1._r8/fdrain(c)   !Qiu
-         
+         !this%hkdepth_col(c) = 1._r8/10.0_r8
+         this%hkdepth_col(c) = 1._r8/fdrain(c)   !Qiu
+         this%anistro(c) = anis(c)
+         !this%anistro(c) =1._r8
       end do
     end associate
 
     deallocate(fdrain)
-
+    deallocate(anis)
   end subroutine InitCold
 
   !------------------------------------------------------------------------
